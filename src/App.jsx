@@ -1,45 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
   Filter,
   ChevronDown,
-  ChevronRight,
-  Clock,
   User,
-  AlertCircle,
   MoreVertical,
   Printer,
-  Edit2,
-  CheckCircle2,
-  Layers,
-  BarChart3,
-  TrendingUp,
-  Activity,
-  ChevronUp,
   Bell,
-  Home,
-  ShoppingBag,
-  CreditCard,
-  Settings,
-  LayoutGrid,
   List,
+  LayoutGrid,
   Check,
   ChevronsUpDown,
   ArrowDown,
-  ArrowUp
+  ArrowUp,
+  Edit2
 } from 'lucide-react';
 
 const INITIAL_DATA = [
-  { id: '1', clinic: '서울바른치과', patient: '김철수', deadline: '2024-10-27', priority: 'high', items: [{ type: '크라운', material: '지르코니아', teeth: ['11', '12'], status: '제작중', technician: '이기공' }, { type: '어버트먼트', material: '커스텀', teeth: ['11'], status: '접수', technician: '미배정' }] },
-  { id: '2', clinic: '연세미소치과', patient: '이영희', deadline: '2024-10-27', priority: 'medium', items: [{ type: '크라운', material: 'PFM', teeth: ['36', '37'], status: '제작중', technician: '김기공' }] },
-  { id: '3', clinic: '미래플란트치과', patient: '박지민', deadline: '2024-10-26', priority: 'urgent', items: [{ type: '인레이', material: '세라믹', teeth: ['44'], status: '배송준비', technician: '최기공' }, { type: '인레이', material: '세라믹', teeth: ['45'], status: '배송준비', technician: '최기공' }] },
-  { id: '4', clinic: '하늘치과', patient: '정민수', deadline: '2024-10-28', priority: 'low', items: [{ type: '가이드', material: '서지컬', teeth: ['21', '22', '23'], status: '제작중', technician: '박기공' }] },
-  { id: '5', clinic: '튼튼치과', patient: '최윤서', deadline: '2024-10-27', priority: 'medium', items: [{ type: '덴처', material: '풀 덴처', teeth: ['Upper'], status: '검수완료', technician: '김기공' }, { type: '덴처', material: '풀 덴처', teeth: ['Lower'], status: '제작중', technician: '이기공' }] },
-  { id: '6', clinic: '미소지음치과', patient: '강하늘', deadline: '2024-10-27', priority: 'high', items: [{ type: '브릿지', material: '지르코니아', teeth: ['14', '15', '16'], status: '제작중', technician: '이기공' }] },
-  { id: '7', clinic: '화이트치과', patient: '조세호', deadline: '2024-10-29', priority: 'low', items: [{ type: '어버트먼트', material: '커스텀', teeth: ['46'], status: '접수', technician: '미배정' }, { type: '크라운', material: '지르코니아', teeth: ['46'], status: '접수', technician: '미배정' }] },
-  { id: '8', clinic: '디지털치과', patient: '유재석', deadline: '2024-10-26', priority: 'medium', items: [{ type: '크라운', material: '임시치아', teeth: ['11'], status: '배송준비', technician: '최기공' }] },
+  { id: '1', patient: '김철수', clinic: '서울바른치과', deadline: '2024-10-27', priority: 'high', items: [{ type: '크라운', material: 'Zirconia / SCRP / Non-Vital', teeth: ['11', '12'], status: '제작중', technician: '이기공' }, { type: '어버트먼트', material: 'Custom Abutment / Ti', teeth: ['11'], status: '접수', technician: '미배정' }] },
+  { id: '2', patient: '이영희', clinic: '연세미소치과', deadline: '2024-10-27', priority: 'medium', items: [{ type: '크라운', material: 'PFM / Base Metal', teeth: ['36', '37'], status: '제작중', technician: '김기공' }] },
+  { id: '3', patient: '박지민', clinic: '미래플란트치과', deadline: '2024-10-26', priority: 'urgent', items: [{ type: '인레이', material: 'E-max / Ceramic', teeth: ['44', '45'], status: '배송준비', technician: '최기공' }] },
+  { id: '4', patient: '정민수', clinic: '하늘치과', deadline: '2024-10-28', priority: 'low', items: [{ type: '서지컬 가이드', material: 'Surgical Resin', teeth: ['21', '22', '23'], status: '제작중', technician: '미배정' }] },
+  { id: '5', patient: '최윤서', clinic: '튼튼치과', deadline: '2024-10-27', priority: 'medium', items: [{ type: '덴처', material: 'Full Denture / Acrylic', teeth: ['Upper'], status: '검수완료', technician: '김기공' }, { type: '개인 트레이', material: 'Custom Tray Resin', teeth: ['Lower'], status: '제작중', technician: '미배정' }] },
+  { id: '6', patient: '강하늘', clinic: '미소지음치과', deadline: '2024-10-27', priority: 'high', items: [{ type: '브릿지', material: 'Zirconia / Monolithic', teeth: ['14', '15', '16'], status: '제작중', technician: '이기공' }] },
 ];
+
+const TECHNICIANS = ['김기공', '이기공', '최기공', '박기공', '미배정'];
 
 const StatusBadge = ({ status }) => {
   const styles = {
@@ -83,9 +70,8 @@ const Checkbox = ({ checked, onChange }) => (
   </motion.div>
 );
 
-// 관리자용 퀵 써머리 패널
 const ManagementSummary = ({ data }) => {
-  const today = '2024-10-27'; // 기준일 Mock
+  const today = '2024-10-27';
   const tomorrow = '2024-10-28';
 
   const stats = useMemo(() => ({
@@ -131,9 +117,259 @@ const ManagementSummary = ({ data }) => {
   );
 };
 
+// ==== Technician Select Button ====
+const TechnicianSelect = ({ name, type = 'single', onAssign }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  if (type === 'multi-assigned') {
+    return <div className="h-[28px] flex items-center text-[11px] font-medium text-[#8B95A1] px-1">복수 작업자</div>;
+  }
+
+  const isUnassigned = name === '미배정' || type === 'multi-unassigned';
+
+  const handleSelect = (tech, e) => {
+    e.stopPropagation();
+    onAssign(tech);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+        className="flex items-center justify-between gap-1.5 px-2.5 py-1 bg-[#F2F4F6] hover:bg-[#E5E8EB] transition-colors rounded-[8px]"
+      >
+        <span className={`text-[11px] font-semibold tracking-tight ${isUnassigned ? 'text-[#8B95A1]' : 'text-[#3182F6]'}`}>
+          {name}
+        </span>
+        <ChevronsUpDown size={12} className="text-[#8B95A1]" strokeWidth={2.5} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-24 bg-white border border-[#F2F4F6] rounded-[10px] shadow-[0_4px_20px_rgba(0,0,0,0.08)] py-1.5 z-[100] cursor-pointer"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {TECHNICIANS.map(tech => (
+              <button
+                key={tech}
+                onClick={(e) => handleSelect(tech, e)}
+                className={`w-full text-center px-2 py-1.5 text-[12px] font-semibold transition-colors hover:bg-[#F2F4F6] ${tech === '미배정' ? 'text-[#8B95A1]' : 'text-[#4E5968]'}`}
+              >
+                {tech}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// 리스트 뷰
+const OrderRow = ({ order, isSelected, onSelect, onAssign }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isMultiItem = order.items.length > 1;
+  const mainStatus = getAggregatedStatus(order.items);
+  const unassignedCount = order.items.filter(i => i.technician === '미배정').length;
+
+  return (
+    <>
+      <motion.tr
+        layout
+        className={`group transition-colors border-b border-[#F2F4F6] last:border-0 relative z-10 ${isSelected ? 'bg-blue-50/40' : 'hover:bg-[#F9FAFB]'} ${isExpanded ? 'bg-[#F9FAFB]' : ''}`}
+        onClick={() => { if (isMultiItem) setIsExpanded(!isExpanded); }}
+        style={{ cursor: isMultiItem ? 'pointer' : 'default' }}
+      >
+        <td className="py-4 pl-6 pr-3 w-14 align-center" onClick={(e) => { e.stopPropagation(); onSelect(); }}>
+          <div className="mt-1 w-fit cursor-pointer">
+            <Checkbox checked={isSelected} onChange={onSelect} />
+          </div>
+        </td>
+
+        {/* === 좌측 그룹: 환자, 보철, 치식 === */}
+        {/* 환자 및 치과 (2줄) */}
+        <td className="py-4 align-top">
+          <div className="flex flex-col gap-0.5 mt-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className={`text-[13px] font-semibold tracking-tight transition-colors ${isSelected ? 'text-[#3182F6]' : 'text-[#333D4B]'}`}>{order.patient}</span>
+              {isMultiItem && <span className="text-[10px] font-semibold bg-blue-50 text-[#3182F6] px-1.5 py-0.5 rounded-[6px]">복합</span>}
+            </div>
+            <span className="text-[12px] text-[#8B95A1] font-medium">{order.clinic}</span>
+          </div>
+        </td>
+
+        {/* 보철 정보 (Material, 2줄) */}
+        <td className="py-4 align-top">
+          <div className="flex flex-col gap-0.5 mt-0.5">
+            {isMultiItem ? (
+              <>
+                <span className="text-[13px] font-semibold text-[#333D4B]">{order.items[0].type} 외 {order.items.length - 1}건</span>
+                <span className="text-[12px] font-medium text-[#8B95A1]">복합 의뢰</span>
+              </>
+            ) : (
+              <>
+                <span className="text-[13px] font-semibold text-[#333D4B]">{order.items[0].material}</span>
+                <span className="text-[12px] font-medium text-[#8B95A1]">{order.items[0].type}</span>
+              </>
+            )}
+          </div>
+        </td>
+
+        {/* 치식 (Teeth) */}
+        <td className="py-4 align-top">
+          <div className="mt-1 min-h-[24px] flex items-center">
+            {isMultiItem ? (
+              <span className="text-[12px] font-medium text-[#B0B8C1]">하단 상세 참조</span>
+            ) : (
+              <div className="flex flex-wrap gap-1">
+                {order.items[0].teeth.map(t => (
+                  <span key={t} className="text-[10px] font-semibold text-[#3182F6] bg-blue-50 px-1.5 py-0.5 rounded-[4px]">{t}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        </td>
+
+        {/* === 우측 그룹: 상태, 작업자, 마감일, 관리 === */}
+        {/* 진행 상태 (Status) */}
+        <td className="py-4 align-top">
+          <div className="mt-1 flex justify-center">
+            <StatusBadge status={mainStatus} />
+          </div>
+        </td>
+
+        {/* 작업자 (Technician) */}
+        <td className="py-4 align-top">
+          <div className="mt-1 flex justify-center">
+            {isMultiItem ? (
+              unassignedCount > 0 ? (
+                <TechnicianSelect name={`${unassignedCount}건 미배정`} type="multi-unassigned" onAssign={(tch) => onAssign(order.id, 'all', tch)} />
+              ) : (
+                <TechnicianSelect name="" type="multi-assigned" />
+              )
+            ) : (
+              <TechnicianSelect name={order.items[0].technician} onAssign={(tch) => onAssign(order.id, 0, tch)} />
+            )}
+          </div>
+        </td>
+
+        {/* 마감일 (Deadline) */}
+        <td className="py-4 align-top">
+          <div className={`mt-1 flex justify-center items-center gap-1.5 text-[13px] font-semibold ${order.priority === 'urgent' || order.priority === 'high' ? 'text-[#F04452]' : 'text-[#8B95A1]'}`}>
+            <span>{formatDate(order.deadline)}</span>
+          </div>
+        </td>
+
+        {/* 관리 (Quick Actions) */}
+        <td className="py-4 align-top">
+          <div className="mt-0.5 flex items-center justify-center gap-1">
+            <button onClick={(e) => { e.stopPropagation(); }} className="p-1.5 text-[#8B95A1] hover:text-[#3182F6] hover:bg-blue-50 rounded-[10px] transition-all">
+              <Printer size={14} />
+            </button>
+            {isMultiItem ? (
+              <motion.div
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+                className="p-1.5 text-[#D1D6DB] hover:text-[#4E5968] bg-transparent rounded-[10px] flex items-center justify-center cursor-pointer hover:bg-[#E5E8EB]"
+              >
+                <ChevronDown size={14} />
+              </motion.div>
+            ) : (
+              <button onClick={(e) => { e.stopPropagation(); }} className="p-1.5 text-[#D1D6DB] hover:text-[#4E5968] rounded-[10px] transition-all hover:bg-[#E5E8EB]">
+                <MoreVertical size={14} />
+              </button>
+            )}
+          </div>
+        </td>
+      </motion.tr>
+
+      {/* Accordion Content for Multi-item */}
+      <AnimatePresence initial={false}>
+        {isExpanded && isMultiItem && (
+          <tr className="bg-[#F9FAFB] border-b border-[#F2F4F6] relative z-0">
+            <td colSpan="8" className="p-0">
+              <motion.div
+                initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
+                animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: 'visible' } }}
+                exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
+                transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+              >
+                <div className="pl-14 py-4 pr-0 space-y-2">
+                  {order.items.map((item, idx) => (
+                    <div key={idx} className="flex items-center py-2.5">
+
+                      {/* 환자명 빈 공간 (부모 컬럼폭 180px와 일치하게 스킵) */}
+                      <div className="w-[180px]"></div>
+
+                      {/* 보철 정보 (헤더 w-240px와 정확히 일치) */}
+                      <div className="w-[240px]">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[13px] font-medium text-[#333D4B]">{item.material}</span>
+                          <span className="text-[11px] font-medium text-[#8B95A1]">{item.type}</span>
+                        </div>
+                      </div>
+
+                      {/* 치식 (나머지 영역 모두 차지) */}
+                      <div className="flex-1 flex items-center pr-4">
+                        <div className="flex flex-wrap gap-1">
+                          {item.teeth.map(t => <span key={t} className="text-[10px] font-semibold text-[#3182F6] bg-blue-50/70 px-1.5 py-0.5 rounded-[8px]">{t}</span>)}
+                        </div>
+                      </div>
+
+                      {/* 우측 진행 관리 영역 (상위 헤더 130px * 4 정확히 일치) */}
+                      <div className="flex items-center">
+                        {/* 진행 상태 */}
+                        <div className="w-[130px] flex justify-center">
+                          <StatusBadge status={item.status} />
+                        </div>
+
+                        {/* 작업자 */}
+                        <div className="w-[130px] flex justify-center relative z-20">
+                          <TechnicianSelect name={item.technician} onAssign={(tch) => onAssign(order.id, idx, tch)} />
+                        </div>
+
+                        {/* 마감일 공백 */}
+                        <div className="w-[130px]"></div>
+
+                        {/* 관리 */}
+                        <div className="w-[130px] flex justify-center gap-1">
+                          <button className="p-1.5 text-[#D1D6DB] hover:text-[#4E5968] rounded-[8px] transition-all hover:bg-[#F2F4F6]">
+                            <Edit2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </td>
+          </tr>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
 // 카드 뷰
-const OrderCard = ({ order, isSelected, onSelect }) => {
-  const allTeeth = Array.from(new Set(order.items.flatMap(item => item.teeth)));
+const OrderCard = ({ order, isSelected, onSelect, onAssign }) => {
   const mainStatus = getAggregatedStatus(order.items);
   const isMultiItem = order.items.length > 1;
 
@@ -145,7 +381,7 @@ const OrderCard = ({ order, isSelected, onSelect }) => {
       exit={{ opacity: 0, scale: 0.95 }}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
-      className={`p-5 rounded-[16px] flex flex-col justify-between transition-colors group relative ${isSelected ? 'bg-blue-50/60' : 'bg-white'}`}
+      className={`p-5 rounded-[16px] flex flex-col justify-between transition-colors group relative border border-transparent ${isSelected ? 'bg-blue-50/60 border-blue-200' : 'bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)]'}`}
     >
       <div className="absolute top-5 left-5">
         <Checkbox checked={isSelected} onChange={onSelect} />
@@ -159,24 +395,40 @@ const OrderCard = ({ order, isSelected, onSelect }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mb-1">
-          <h4 className={`text-[15px] font-semibold tracking-tight transition-colors ${isSelected ? 'text-[#3182F6]' : 'text-[#333D4B]'}`}>{order.patient}</h4>
-          {isMultiItem && <span className="text-[10px] bg-[#F2F4F6] text-[#8B95A1] px-1.5 py-0.5 rounded-full font-semibold">복합</span>}
+        <div className="flex flex-col gap-0.5 mb-4">
+          <div className="flex items-center gap-2">
+            <h4 className={`text-[15px] font-bold tracking-tight transition-colors ${isSelected ? 'text-[#3182F6]' : 'text-[#333D4B]'}`}>{order.patient}</h4>
+            {isMultiItem && <span className="text-[10px] bg-blue-50 text-[#3182F6] px-1.5 py-0.5 rounded-[6px] font-semibold">복합</span>}
+          </div>
+          <p className="text-[12px] text-[#8B95A1] font-medium">{order.clinic}</p>
         </div>
-        <p className="text-[12px] text-[#8B95A1] font-medium mb-3">{order.clinic}</p>
 
-        <div className="flex flex-wrap gap-1 mb-3">
-          {allTeeth.map(t => (
-            <span key={t} className="text-[10px] font-semibold text-[#3182F6] bg-blue-50 px-1.5 py-0.5 rounded-[8px]">{t}</span>
+        <div className="flex flex-col gap-2 mb-4">
+          {order.items.map((item, idx) => (
+            <div key={idx} className="flex flex-col bg-[#F9FAFB] p-3 rounded-[10px] gap-2.5">
+              <div className="flex justify-between items-start">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[13px] font-medium text-[#333D4B]">{item.material}</span>
+                  <span className="text-[11px] font-medium text-[#8B95A1]">{item.type}</span>
+                </div>
+                <StatusBadge status={item.status} />
+              </div>
+              <div className="flex justify-between items-center bg-white p-2 rounded-[12px] border border-[#F2F4F6]">
+                <div className="flex flex-wrap gap-1">
+                  {item.teeth.map(t => <span key={t} className="text-[10px] font-semibold text-[#3182F6] bg-blue-50 px-1.5 py-0.5 rounded-[6px]">{t}</span>)}
+                </div>
+                <div className="relative z-10">
+                  <TechnicianSelect name={item.technician} onAssign={(tch) => onAssign(order.id, idx, tch)} />
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>
 
       <div className="pt-3 border-t border-[#F2F4F6] flex justify-between items-center pl-8">
-        <span className="text-[12px] font-semibold text-[#4E5968]">
-          {order.items[0].type}, {order.items[0].material} {isMultiItem && <span className="text-[#B0B8C1] font-normal ml-0.5">외 {order.items.length - 1}</span>}
-        </span>
-        <div className="text-[11px] font-semibold text-[#8B95A1]">
+        <span className="text-[12px] font-medium text-[#8B95A1]">마감일</span>
+        <div className={`text-[12px] font-bold tracking-tight ${order.priority === 'urgent' || order.priority === 'high' ? 'text-[#F04452]' : 'text-[#4E5968]'}`}>
           <span>{formatDate(order.deadline)}</span>
         </div>
       </div>
@@ -184,123 +436,16 @@ const OrderCard = ({ order, isSelected, onSelect }) => {
   );
 };
 
-// 리스트 뷰
-const OrderRow = ({ order, isSelected, onSelect }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const allTeeth = Array.from(new Set(order.items.flatMap(item => item.teeth)));
-  const mainStatus = getAggregatedStatus(order.items);
-  const isMultiItem = order.items.length > 1;
-
-  return (
-    <>
-      <motion.tr
-        layout
-        className={`group transition-colors cursor-pointer ${isSelected ? 'bg-blue-50/40' : 'hover:bg-[#F9FAFB]'} ${isExpanded ? 'bg-[#F9FAFB]' : ''}`}
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <td className="py-3.5 pl-6 pr-3 w-14">
-          <Checkbox checked={isSelected} onChange={onSelect} />
-        </td>
-        <td className="py-3.5">
-          <div className="flex items-center gap-2">
-            <span className={`text-[13px] font-semibold transition-colors ${isSelected ? 'text-[#3182F6]' : 'text-[#333D4B]'}`}>{order.patient}</span>
-            {isMultiItem && <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>}
-          </div>
-        </td>
-        <td className="py-3.5 text-[12px] text-[#4E5968] font-medium">{order.clinic}</td>
-        <td className="py-3.5">
-          <div className="flex flex-wrap gap-1">
-            {allTeeth.map(t => (
-              <span key={t} className="text-[10px] font-semibold text-[#3182F6] bg-blue-50 px-1.5 py-0.5 rounded-[8px]">{t}</span>
-            ))}
-          </div>
-        </td>
-        <td className="py-3.5 text-[12px] text-[#4E5968] font-semibold">
-          {order.items[0].type}, {order.items[0].material} {isMultiItem && <span className="text-[#B0B8C1] font-normal ml-1">외 {order.items.length - 1}</span>}
-        </td>
-        <td className="py-3.5 text-center">
-          <StatusBadge status={mainStatus} />
-        </td>
-        <td className="py-3.5">
-          <div className={`flex items-center gap-1.5 text-[11px] font-semibold ${order.priority === 'urgent' || order.priority === 'high' ? 'text-[#F04452]' : 'text-[#8B95A1]'}`}>
-            <span>{formatDate(order.deadline)}</span>
-          </div>
-        </td>
-        <td className="py-3.5 pr-6 text-right w-24">
-          <div className="flex items-center justify-end gap-1">
-            <button onClick={(e) => e.stopPropagation()} className="p-1.5 text-[#8B95A1] hover:text-[#3182F6] hover:bg-blue-50 rounded-[10px] transition-all">
-              <Printer size={14} />
-            </button>
-            <motion.div
-              animate={{ rotate: isExpanded ? 180 : 0 }}
-              transition={{ duration: 0.3 }}
-              className="p-1.5 text-[#D1D6DB] hover:text-[#4E5968] transition-colors rounded-[10px] flex items-center justify-center"
-            >
-              <ChevronDown size={14} />
-            </motion.div>
-          </div>
-        </td>
-      </motion.tr>
-
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <tr className="bg-[#F9FAFB]">
-            <td colSpan="8" className="p-0">
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
-                className="overflow-hidden"
-              >
-                <div className="px-8 py-4">
-                  <div className="w-full">
-                    <div className="flex justify-between items-center mb-3">
-                      <h4 className="text-[12px] font-semibold text-[#8B95A1]">개별 항목 현황</h4>
-                    </div>
-                    <div className="space-y-1.5">
-                      {order.items.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-2.5 bg-white rounded-[10px]">
-                          <div className="flex items-center gap-5">
-                            <div className="flex items-baseline gap-1.5 min-w-[120px]">
-                              <span className="text-[13px] font-semibold text-[#333D4B]">{item.type}</span>
-                              <span className="text-[12px] font-medium text-[#8B95A1]">{item.material}</span>
-                            </div>
-                            <div className="flex gap-1">
-                              {item.teeth.map(t => <span key={t} className="text-[10px] font-semibold text-[#3182F6] bg-blue-50 px-1.5 py-0.5 rounded-[8px]">{t}</span>)}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-5">
-                            <div className="flex items-center gap-2 text-[12px] text-[#6B7684]">
-                              <User size={12} className="text-[#D1D6DB]" />
-                              <span>{item.technician}</span>
-                            </div>
-                            <StatusBadge status={item.status} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </td>
-          </tr>
-        )}
-      </AnimatePresence>
-    </>
-  );
-};
-
 export default function App() {
+  const [data, setData] = useState(INITIAL_DATA);
   const [viewMode, setViewMode] = useState('list');
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [activeTab, setActiveTab] = useState('전체');
-  const [sortConfig, setSortConfig] = useState(null); // { key: 'deadline', direction: 'asc' | 'desc' }
+  const [sortConfig, setSortConfig] = useState(null);
 
   const filteredData = useMemo(() => {
-    let result = [...INITIAL_DATA].filter(order => {
+    let result = [...data].filter(order => {
       if (activeTab === '전체') return true;
-
       const mainStatus = getAggregatedStatus(order.items);
       if (activeTab === '요청됨') return mainStatus === '접수';
       if (activeTab === '제작중') return mainStatus === '제작중';
@@ -322,7 +467,7 @@ export default function App() {
     }
 
     return result;
-  }, [activeTab, sortConfig]);
+  }, [data, activeTab, sortConfig]);
 
   const handleSelectAll = () => {
     if (selectedIds.size === filteredData.length) {
@@ -353,10 +498,27 @@ export default function App() {
     setSortConfig({ key, direction });
   };
 
+  const handleAssign = (orderId, itemIdx, technicianName) => {
+    setData(prev => prev.map(order => {
+      if (order.id !== orderId) return order;
+      if (itemIdx === 'all') {
+        return {
+          ...order,
+          items: order.items.map(i => ({ ...i, technician: technicianName }))
+        };
+      } else {
+        return {
+          ...order,
+          items: order.items.map((i, idx) => idx === itemIdx ? { ...i, technician: technicianName } : i)
+        };
+      }
+    }));
+  };
+
   const isAllSelected = selectedIds.size === filteredData.length && filteredData.length > 0;
 
   return (
-    <div className="min-h-screen bg-[#F2F4F6] text-[#333D4B] antialiased flex flex-col pt-0">
+    <div className="min-h-screen bg-[#F2F4F6] text-[#333D4B] antialiased flex flex-col pt-0 pb-12">
       <header className="h-16 bg-white flex items-center justify-between px-8 sticky top-0 z-50">
         <div className="flex items-center gap-10">
           <div className="flex items-center gap-2.5">
@@ -384,7 +546,7 @@ export default function App() {
       <main className="max-w-[1300px] w-full mx-auto p-8 flex-1">
         <div className="flex justify-between items-end mb-6">
           <div>
-            <h2 className="text-[20px] font-semibold text-[#191F28] mb-1 tracking-tight">작업 현황 및 스케줄</h2>
+            <h2 className="text-[20px] font-bold text-[#191F28] mb-1 tracking-tight">작업 현황 및 스케줄</h2>
             <p className="text-[#8B95A1] text-[12px] font-medium">관리자의 빠른 판단과 실행을 돕는 통합 워크스페이스입니다.</p>
           </div>
           <div className="flex gap-2.5">
@@ -426,13 +588,13 @@ export default function App() {
           </div>
         </div>
 
-        <ManagementSummary data={INITIAL_DATA} />
+        <ManagementSummary data={data} />
 
         <motion.section
           layout
-          className={`rounded-[16px] transition-colors ${viewMode === 'list' ? 'bg-white overflow-hidden' : 'bg-transparent'}`}
+          className={`rounded-[16px] transition-colors ${viewMode === 'list' ? 'bg-white overflow-hidden/removed' : 'bg-transparent'}`}
         >
-          <div className={`px-6 py-4 flex flex-col gap-3 ${viewMode === 'list' ? 'bg-white' : 'mb-4 px-0'}`}>
+          <div className={`px-6 py-4 flex flex-col gap-3 ${viewMode === 'list' ? 'bg-white rounded-t-[16px]' : 'mb-4 px-0'}`}>
             <div className="flex justify-between items-center w-full">
               <div className="flex bg-[#F2F4F6] p-1 rounded-[12px] relative">
                 {['전체', '요청됨', '제작중', '배송준비'].map((t) => (
@@ -495,53 +657,58 @@ export default function App() {
 
           <AnimatePresence mode="wait">
             {viewMode === 'list' ? (
-              <motion.table
+              <motion.div
                 key="list"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
-                className="w-full text-left"
+                className="bg-white rounded-b-[16px] pb-4"
               >
-                <thead>
-                  <tr className="text-[12px] font-medium text-[#8B95A1] bg-[#F9FAFB]">
-                    <th className="py-3 pl-6 pr-3 w-14">
-                      <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
-                    </th>
-                    <th className="py-3">환자명</th>
-                    <th className="py-3">치과명</th>
-                    <th className="py-3">치식</th>
-                    <th className="py-3">보철 정보</th>
-                    <th className="py-3 text-center">진행 상태</th>
-                    <th className="py-3">
-                      <button
-                        onClick={() => handleSort('deadline')}
-                        className={`flex items-center gap-1 hover:text-[#4E5968] transition-colors focus:outline-none ${sortConfig?.key === 'deadline' ? 'text-[#3182F6]' : ''}`}
-                      >
-                        마감일
-                        {sortConfig?.key === 'deadline' ? (
-                          sortConfig.direction === 'asc' ? <ArrowUp size={13} strokeWidth={2.5} /> : <ArrowDown size={13} strokeWidth={2.5} />
-                        ) : (
-                          <ChevronsUpDown size={13} className="text-[#D1D6DB]" />
-                        )}
-                      </button>
-                    </th>
-                    <th className="py-3 text-right pr-6 whitespace-nowrap">관리</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F2F4F6]">
-                  <AnimatePresence>
-                    {filteredData.map(order => (
-                      <OrderRow
-                        key={order.id}
-                        order={order}
-                        isSelected={selectedIds.has(order.id)}
-                        onSelect={() => handleSelectItem(order.id)}
-                      />
-                    ))}
-                  </AnimatePresence>
-                </tbody>
-              </motion.table>
+                <table className="w-full text-left table-fixed">
+                  <thead>
+                    <tr className="text-[12px] font-medium text-[#8B95A1] bg-[#F9FAFB]">
+                      <th className="py-3 pl-6 pr-3 w-14 border-b border-[#F2F4F6]">
+                        <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
+                      </th>
+                      <th className="py-3 border-b border-[#F2F4F6] w-[180px]">환자 및 치과</th>
+                      <th className="py-3 border-b border-[#F2F4F6] w-[240px]">보철 정보</th>
+                      <th className="py-3 border-b border-[#F2F4F6]">치식</th>
+
+                      {/* 우측 그룹 */}
+                      <th className="py-3 text-center border-b border-[#F2F4F6] w-[130px]">진행 상태</th>
+                      <th className="py-3 text-center border-b border-[#F2F4F6] w-[130px]">작업자</th>
+                      <th className="py-3 border-b border-[#F2F4F6] w-[130px]">
+                        <button
+                          onClick={() => handleSort('deadline')}
+                          className={`mx-auto flex items-center justify-center gap-1 hover:text-[#4E5968] transition-colors focus:outline-none w-full ${sortConfig?.key === 'deadline' ? 'text-[#3182F6]' : ''}`}
+                        >
+                          마감일
+                          {sortConfig?.key === 'deadline' ? (
+                            sortConfig.direction === 'asc' ? <ArrowUp size={13} strokeWidth={2.5} /> : <ArrowDown size={13} strokeWidth={2.5} />
+                          ) : (
+                            <ChevronsUpDown size={13} className="text-[#D1D6DB]" />
+                          )}
+                        </button>
+                      </th>
+                      <th className="py-3 text-center whitespace-nowrap border-b border-[#F2F4F6] w-[130px]">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody className="">
+                    <AnimatePresence>
+                      {filteredData.map(order => (
+                        <OrderRow
+                          key={order.id}
+                          order={order}
+                          isSelected={selectedIds.has(order.id)}
+                          onSelect={() => handleSelectItem(order.id)}
+                          onAssign={handleAssign}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </motion.div>
             ) : (
               <motion.div
                 key="card"
@@ -558,6 +725,7 @@ export default function App() {
                       order={order}
                       isSelected={selectedIds.has(order.id)}
                       onSelect={() => handleSelectItem(order.id)}
+                      onAssign={handleAssign}
                     />
                   ))}
                 </AnimatePresence>
