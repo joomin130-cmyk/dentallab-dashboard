@@ -4,6 +4,7 @@ import {
   Search,
   Filter,
   ChevronDown,
+  ChevronLeft,
   User,
   MoreVertical,
   Printer,
@@ -14,7 +15,15 @@ import {
   ChevronsUpDown,
   ArrowDown,
   ArrowUp,
-  Edit2
+  Edit2,
+  Save,
+  Layers,
+  FileText,
+  Camera,
+  ChevronUp,
+  RotateCcw,
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
 
 const INITIAL_DATA = [
@@ -27,6 +36,11 @@ const INITIAL_DATA = [
 ];
 
 const TECHNICIANS = ['김기공', '이기공', '최기공', '박기공', '미배정'];
+
+const simplifyMaterial = (material) => {
+  if (!material) return '';
+  return material.split('/')[0].trim();
+};
 
 const StatusBadge = ({ status }) => {
   const styles = {
@@ -64,7 +78,7 @@ const Checkbox = ({ checked, onChange }) => (
   <motion.div
     whileTap={{ scale: 0.85 }}
     onClick={(e) => { e.stopPropagation(); onChange(); }}
-    className={`w-5 h-5 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${checked ? 'bg-[#3182F6]' : 'bg-[#E5E8EB] hover:bg-[#D1D6DB]'}`}
+    className={`w-5 h-5 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${checked ? 'bg-[#3182F6]' : 'bg-white border border-[#D1D6DB] hover:bg-[#F9FAFB]'}`}
   >
     {checked && <Check size={14} className="text-white" strokeWidth={3} />}
   </motion.div>
@@ -117,7 +131,46 @@ const ManagementSummary = ({ data }) => {
   );
 };
 
-// ==== Technician Select Button ====
+// [NEW] FDI Teeth Grid
+const TeethGrid = ({ teeth = [], fill = false }) => {
+  const ur = teeth.filter(t => /^[1][1-8]$/.test(t));
+  const ul = teeth.filter(t => /^[2][1-8]$/.test(t));
+  const ll = teeth.filter(t => /^[3][1-8]$/.test(t));
+  const lr = teeth.filter(t => /^[4][1-8]$/.test(t));
+  const others = teeth.filter(t => !/^[1-4][1-8]$/.test(t));
+
+  return (
+    <div className={`flex flex-col gap-1 ${fill ? 'w-full' : 'w-[260px]'}`}>
+      {others.length > 0 && (
+        <div className="flex gap-1 mb-1">
+          {others.map(t => <span key={t} className="text-[14px] font-bold text-[#3182F6] bg-blue-50 px-2.5 py-1 rounded-[8px]">{t}</span>)}
+        </div>
+      )}
+      <div className="flex flex-col w-full h-[120px] bg-[#F9FAFB] rounded-[12px] border border-[#E5E8EB] overflow-hidden relative">
+        <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-[#E5E8EB]"></div>
+        <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-[#E5E8EB]"></div>
+
+        <div className="flex flex-1">
+          <div className="flex-1 flex items-end justify-end p-2 gap-1.5 flex-wrap">
+            {ur.map(t => <span key={t} className="text-[14px] font-bold text-[#3182F6] bg-[#E8F3FF] px-2 py-1 rounded-[8px] leading-none">{t}</span>)}
+          </div>
+          <div className="flex-1 flex items-end justify-start p-2 gap-1.5 flex-wrap">
+            {ul.map(t => <span key={t} className="text-[14px] font-bold text-[#3182F6] bg-[#E8F3FF] px-2 py-1 rounded-[8px] leading-none">{t}</span>)}
+          </div>
+        </div>
+        <div className="flex flex-1">
+          <div className="flex-1 flex items-start justify-end p-2 gap-1.5 flex-wrap">
+            {lr.map(t => <span key={t} className="text-[14px] font-bold text-[#3182F6] bg-[#E8F3FF] px-2 py-1 rounded-[8px] leading-none">{t}</span>)}
+          </div>
+          <div className="flex-1 flex items-start justify-start p-2 gap-1.5 flex-wrap">
+            {ll.map(t => <span key={t} className="text-[14px] font-bold text-[#3182F6] bg-[#E8F3FF] px-2 py-1 rounded-[8px] leading-none">{t}</span>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TechnicianSelect = ({ name, type = 'single', onAssign }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -182,8 +235,380 @@ const TechnicianSelect = ({ name, type = 'single', onAssign }) => {
   );
 };
 
-// 리스트 뷰
-const OrderRow = ({ order, isSelected, onSelect, onAssign }) => {
+// [NEW] History Timeline (Flat Design Applied)
+const HistoryTimeline = ({ history = [], type }) => {
+  if (!history || history.length === 0) {
+    return (
+      <div className="py-10 text-center text-[#B0B8C1] text-[13px] font-medium">
+        이력이 존재하지 않습니다.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-[#F2F4F6]">
+      {history.map((item, i) => (
+        <div key={i} className="relative pl-8">
+          <div className={`absolute left-0 top-1.5 w-6 h-6 rounded-full border-[3px] border-white flex items-center justify-center text-[10px] font-bold ${i === 0 ? 'bg-[#3182F6] text-white' : 'bg-[#D1D6DB] text-white'}`}>
+            {type === 'version' ? (item.version ? item.version.replace('v', '') : '') : ''}
+          </div>
+          <div>
+            <div className="flex justify-between items-start mb-0.5">
+              <p className={`text-[13px] font-bold tracking-tight ${i === 0 ? 'text-[#3182F6]' : 'text-[#4E5968]'}`}>
+                {type === 'version' ? item.version : item.item}
+              </p>
+              <span className="text-[11px] text-[#B0B8C1] font-bold tracking-tight">{item.date}</span>
+            </div>
+            <p className="text-[12px] text-[#8B95A1] font-medium leading-snug">
+              {type === 'version' ? item.reason : `${item.clinic} · ${item.teeth?.join(', ')}번`}
+            </p>
+            {type === 'version' && <p className="text-[11px] text-[#B0B8C1] mt-1 italic font-medium">{item.author}</p>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// [NEW] Order Detail View (Strictly Flat Design, No Air Shadow)
+const OrderDetailView = ({ order, onBack, onAssign }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [activeHistoryTab, setActiveHistoryTab] = useState('change');
+
+  // Defensive defaults as requested to prevent missing data crashes
+  const safeDoctor = order.doctor || '김의사';
+  const safeStaff = order.staff || '이실장';
+  const safeOrderDate = order.orderDate || '2024.10.25';
+  const safeScanInfo = order.scanInfo || '3 Shape Communicate';
+  const safeShade = order.shade || 'D2';
+  const safeMemo = order.memo || '힐링 16- 50717- 459';
+  const safeFuturePlan = order.futurePlan || '23년12월 처음 셋팅하시고 깨져서 다시 제작 24년 11월 셋팅 하신건데 깨져서 오심';
+  const safeModificationHistory = order.modificationHistory || [{ version: 'v1', author: '시스템', date: '방금', reason: '초기 생성' }];
+  const safePatientHistory = order.patientHistory || [];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="pb-20"
+    >
+      <div className="flex justify-between items-center mb-6">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[#8B95A1] hover:text-[#333D4B] transition-colors group">
+          <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+          <span className="text-[14px] font-bold tracking-tight">의뢰 목록으로 돌아가기</span>
+        </button>
+        <div className="flex gap-2">
+          {isEditing ? (
+            <>
+              <button onClick={() => setIsEditing(false)} className="bg-white border border-[#F2F4F6] text-[#4E5968] px-4 py-2 rounded-[10px] text-[13px] font-bold hover:bg-[#F9FAFB] transition-colors">취소</button>
+              <button onClick={() => setIsEditing(false)} className="bg-[#3182F6] text-white px-4 py-2 rounded-[10px] text-[13px] font-bold flex items-center gap-1.5 hover:bg-[#2b72d6] transition-colors">
+                <Save size={14} /> 변경사항 저장
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setIsEditing(true)} className="bg-white border border-[#F2F4F6] text-[#4E5968] px-4 py-2 rounded-[10px] text-[13px] font-bold hover:bg-[#F9FAFB] transition-colors">
+                <Edit2 size={13} className="inline mr-1" /> 수정하기
+              </button>
+              <button className="bg-[#3281FA] text-white px-4 py-2 rounded-[10px] text-[13px] font-bold hover:bg-[#2b72d6] transition-colors">
+                작업 완료 처리
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-8 space-y-2">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
+            className="bg-white p-6 rounded-[16px]"
+          >
+            <div className="flex justify-between items-start mb-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 mb-1.5">
+                  {isEditing ? (
+                    <input type="text" defaultValue={order.patient} className="text-[22px] font-bold text-[#191F28] border-b border-[#3182F6] outline-none w-32 pb-0.5" />
+                  ) : (
+                    <h3 className="text-[20px] font-bold text-[#191F28] tracking-tight">{order.patient}</h3>
+                  )}
+                  <StatusBadge status={getAggregatedStatus(order.items)} />
+                  <span className="bg-[#F2F4F6] text-[#8B95A1] px-2 py-0.5 rounded-[6px] text-[11px] font-bold">재제작</span>
+                </div>
+                <p className="text-[14px] text-[#8B95A1] font-medium">{order.clinic}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[11px] text-[#B0B8C1] font-bold mb-0.5 tracking-wider">마감일</p>
+                <p className={`text-[18px] font-bold tracking-tight ${order.priority === 'urgent' || order.priority === 'high' ? 'text-[#F04452]' : 'text-[#333D4B]'}`}>{formatDate(order.deadline)}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-3 pt-4 border-t border-[#F2F4F6]">
+              {[
+                { label: '담당 의사', value: safeDoctor },
+                { label: '치과위생사', value: safeStaff },
+                { label: '접수일', value: safeOrderDate },
+                { label: '스캔 정보', value: safeScanInfo },
+              ].map((info, idx) => (
+                <div key={idx}>
+                  <p className="text-[11px] text-[#B0B8C1] font-semibold mb-1">{info.label}</p>
+                  <p className="text-[14px] font-semibold text-[#4E5968] tracking-tight">{info.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* 카드 안에 자연스럽게 스며드는 히스토리 영역 */}
+            <div className="mt-8 pt-8 border-t border-[#F2F4F6]">
+              <div className="flex items-center justify-between mb-5">
+                <h4 className="text-[16px] font-bold text-[#191F28] tracking-tight">상세 히스토리</h4>
+                <div className="flex bg-[#F2F4F6] p-1 rounded-[8px]">
+                  <button 
+                    onClick={() => setActiveHistoryTab('change')}
+                    className={`px-3.5 py-1.5 text-[12px] font-bold rounded-[6px] transition-colors ${activeHistoryTab === 'change' ? 'bg-white text-[#333D4B] shadow-sm' : 'text-[#8B95A1] hover:text-[#4E5968]'}`}
+                  >
+                    의뢰 변경 이력
+                  </button>
+                  <button 
+                    onClick={() => setActiveHistoryTab('patient')}
+                    className={`px-3.5 py-1.5 text-[12px] font-bold rounded-[6px] transition-colors ${activeHistoryTab === 'patient' ? 'bg-white text-[#333D4B] shadow-sm' : 'text-[#8B95A1] hover:text-[#4E5968]'}`}
+                  >
+                    환자 사전 정보
+                  </button>
+                </div>
+              </div>
+              
+              <div className="max-h-[300px] overflow-y-auto pr-2">
+                {activeHistoryTab === 'change' ? (
+                  <HistoryTimeline history={safeModificationHistory} type="version" />
+                ) : (
+                  <HistoryTimeline history={safePatientHistory} type="patient" />
+                )}
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
+            className="bg-white p-8 rounded-[16px]"
+          >
+            <h4 className="text-[20px] font-bold text-[#191F28] mb-8 tracking-tight">보철 및 치식 정보</h4>
+            <div className="space-y-20">
+              {order.items.map((item, idx) => (
+                <div key={idx} className="flex flex-col gap-4 relative">
+                  {idx > 0 && <div className="absolute -top-5 left-0 right-0 h-[1px] bg-[#F2F4F6]"></div>}
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h5 className="text-[15px] font-semibold text-[#191F28] mb-0.5">{item.material}</h5>
+                      <p className="text-[14px] font-medium text-[#8B95A1]">{item.type}</p>
+                    </div>
+                    <div className="flex items-center justify-end gap-8">
+                      <div className="flex flex-col items-end">
+                        <p className="text-[12px] text-[#B0B8C1] font-semibold mb-1">작업자</p>
+                        <div className="relative z-10 w-fit">
+                          <TechnicianSelect name={item.technician} onAssign={(tch) => onAssign(order.id, idx, tch)} />
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <p className="text-[12px] text-[#B0B8C1] font-semibold mb-1">진행 상태</p>
+                        <StatusBadge status={item.status} />
+                      </div>
+                    </div>
+                  </div>
+                  <TeethGrid teeth={item.teeth} fill={true} />
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
+            className="bg-white p-8 rounded-[16px]"
+          >
+            <h4 className="text-[20px] font-bold text-[#191F28] mb-6 tracking-tight">쉐이드</h4>
+            <div className="mb-4">
+              <p className="text-[16px] font-bold text-[#191F28] leading-tight">{safeShade}</p>
+              <p className="text-[13px] text-[#8B95A1] font-medium mt-1">쉐이드</p>
+            </div>
+            <div className="flex gap-4">
+              {[1, 2].map(i => (
+                <div key={i} className="w-[160px] h-[160px] bg-[#F9FAFB] rounded-[16px] overflow-hidden border border-[#E5E8EB]">
+                  <img src={i === 1 ? "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?q=80&w=300" : "https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=300"} alt="Shade" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+            className="bg-white p-8 rounded-[16px]"
+          >
+            <h4 className="text-[20px] font-bold text-[#191F28] mb-5 tracking-tight">추가 정보</h4>
+            <div className="bg-[#F2F4F6] text-[#4E5968] font-semibold text-[13px] px-3.5 py-1.5 rounded-[8px] w-fit mb-8">
+              보험 적용 : 아니오
+            </div>
+
+            <div className="mb-8">
+              <p className="text-[13px] text-[#8B95A1] font-medium mb-1.5">메모</p>
+              {isEditing ? (
+                <textarea className="w-full bg-[#F9FAFB] border border-[#E5E8EB] p-4 rounded-[12px] outline-none text-[16px] text-[#191F28] font-medium resize-none min-h-[100px]" defaultValue={safeMemo}></textarea>
+              ) : (
+                <p className="text-[16px] text-[#191F28] font-medium leading-relaxed whitespace-pre-wrap">{safeMemo}</p>
+              )}
+            </div>
+
+            <div>
+
+              <div>
+                <p className="text-[13px] text-[#8B95A1] font-medium mb-1.5">향후 보철 계획</p>
+                <p className="text-[16px] text-[#191F28] font-medium leading-relaxed whitespace-pre-wrap">{safeFuturePlan}</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="col-span-4 space-y-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25, ease: "easeOut" }}
+            className="bg-[#F9FAFB] rounded-[16px] flex flex-col h-[calc(100vh-140px)] sticky top-[100px]"
+          >
+            <div className="flex justify-end items-center p-6 pb-2">
+              <button className="bg-[#191F28] text-white px-5 py-2.5 text-[13px] font-bold rounded-[8px] tracking-tight shadow-md hover:bg-[#333D4B] transition-colors">
+                치과 요청사항 자동 분배하기
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-10 custom-scrollbar">
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-full bg-white border-[3px] border-black flex items-center justify-center shadow-sm flex-shrink-0">
+                  <span className="text-[16px] font-black text-black">O</span>
+                </div>
+                <div className="flex flex-col gap-3 w-full mt-0.5">
+                  <div className="bg-white p-4 pr-10 rounded-[12px] border border-[#E5E8EB] flex items-center gap-3 w-fit shadow-xs cursor-pointer hover:bg-gray-50 transition-colors">
+                    <FileText size={18} className="text-[#8B95A1]" />
+                    <span className="text-[13px] font-bold text-[#4E5968] tracking-tight">수유 이치과 의뢰내용 요약 리포트</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-6 mt-1 ml-1 text-[#B0B8C1]">
+                    <button className="hover:text-[#4E5968] transition-colors"><RotateCcw size={16} /></button>
+                    <button className="hover:text-[#4E5968] transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></button>
+                    <button className="hover:text-[#4E5968] transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg></button>
+                    <button className="hover:text-[#4E5968] transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg></button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <h5 className="text-[15px] font-bold text-[#333D4B] ml-1 mb-2">다음 기능으로 추천드려요</h5>
+                {[
+                  "치과에서 요청한 의뢰의 내용이 적절한지 분석해 줄래?",
+                  "추가적으로 치과 측에 문의하면 좋을 질문이 있을까?",
+                  "현재 제작 중인 다른 보철물과의 우선순위를 어떻게 할까?",
+                  "원장님과 전화 소통 시 대답을 더 잘 이끌어낼 방법이 있을까?",
+                  "특정 치식 부위에 대해 더 깊이 파고들 수 있는 참고 자료를 보여줄래?"
+                ].map((q, i) => (
+                  <button key={i} className="w-full text-left bg-[#F2F4F6] text-[#4E5968] p-4 rounded-[12px] text-[13px] font-bold hover:bg-[#E5E8EB] transition-colors tracking-tight">
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-6 pt-2 bg-[#F9FAFB] border-t border-transparent shrink-0">
+              <div className="flex gap-2 mb-4">
+                <button className="flex-1 bg-white border border-[#E5E8EB] py-3 rounded-[10px] text-[12px] font-bold text-[#4E5968] hover:bg-gray-50 transition-colors shadow-sm">참고자료 추가</button>
+                <button className="flex-1 bg-white border border-[#E5E8EB] py-3 rounded-[10px] text-[12px] font-bold text-[#4E5968] hover:bg-gray-50 transition-colors shadow-sm">작업 순서 재정렬</button>
+                <button className="flex-1 bg-white border border-[#E5E8EB] py-3 rounded-[10px] text-[12px] font-bold text-[#4E5968] hover:bg-gray-50 transition-colors shadow-sm">소통 대본 만들기</button>
+              </div>
+
+              <div className="bg-white flex flex-col justify-between rounded-[20px] p-5 shadow-[0_2px_16px_rgba(0,0,0,0.06)] h-[130px] focus-within:ring-2 focus-within:ring-[#3182F6] transition-shadow">
+                <input type="text" placeholder="원하는 업무를 요청해 보세요!" className="w-full text-[15px] font-bold text-[#191F28] placeholder-[#B0B8C1] outline-none bg-transparent" />
+                <div className="flex justify-between items-center mt-auto">
+                  <button className="flex items-center gap-1.5 text-[14px] font-bold text-[#8B95A1] hover:text-[#4E5968] transition-colors rounded-md p-1">
+                    <span className="text-[18px] pb-0.5 leading-none">⊕</span> 파일
+                  </button>
+                  <button className="w-8 h-8 rounded-full bg-[#E5E8EB] text-white flex items-center justify-center hover:bg-[#4E5968] transition-colors shrink-0">
+                    <ChevronUp size={18} strokeWidth={3} />
+                  </button>
+                </div>
+              </div>
+              <div className="text-center mt-5 mb-1">
+                <span className="text-[11px] font-extrabold text-[#B0B8C1]">DIIT Copilot powered by Antigravity</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+
+// 카드 뷰
+const OrderCard = ({ order, isSelected, onSelect, onAssign, onDetailClick }) => {
+  const allTeeth = Array.from(new Set(order.items.flatMap(item => item.teeth)));
+  const mainStatus = getAggregatedStatus(order.items);
+  const isMultiItem = order.items.length > 1;
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.2 }}
+      className={`p-5 rounded-[16px] flex flex-col justify-between transition-colors group relative border border-[#F2F4F6] ${isSelected ? 'bg-blue-50/60' : 'bg-white'}`}
+    >
+      <div className="absolute top-5 left-5">
+        <Checkbox checked={isSelected} onChange={onSelect} />
+      </div>
+      <div className="pl-8">
+        <div className="flex justify-between items-start mb-3">
+          <StatusBadge status={mainStatus} />
+          <div className="flex gap-1 border border-[#F2F4F6] rounded-[8px] p-0.5 bg-white">
+            <button onClick={(e) => { e.stopPropagation(); onDetailClick(order); }} className="w-6 h-6 flex items-center justify-center text-[#B0B8C1] hover:text-[#3182F6] hover:bg-blue-50 transition-colors rounded-[6px]"><MoreVertical size={13} /></button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 mb-1 cursor-pointer w-fit hover:underline decoration-[#3182F6]/50 underline-offset-2" onClick={(e) => { e.stopPropagation(); onDetailClick(order); }}>
+          <h4 className={`text-[15px] font-semibold tracking-tight transition-colors ${isSelected ? 'text-[#3182F6]' : 'text-[#333D4B]'}`}>{order.patient}</h4>
+          {isMultiItem && <span className="text-[10px] items-center flex bg-[#F2F4F6] text-[#8B95A1] px-1.5 py-0.5 rounded-[6px] font-semibold tracking-tight">복합</span>}
+        </div>
+        <p className="text-[12px] text-[#8B95A1] font-medium mb-3">{order.clinic}</p>
+
+        <div className="flex flex-wrap gap-1 mb-3 cursor-pointer" onClick={(e) => { e.stopPropagation(); onDetailClick(order); }}>
+          {allTeeth.map(t => (
+            <span key={t} className="text-[10px] font-semibold text-[#3182F6] bg-blue-50 px-1.5 py-0.5 rounded-[8px]">{t}</span>
+          ))}
+        </div>
+      </div>
+
+      <div className="pt-3 border-t border-[#F2F4F6] flex justify-between items-center pl-8">
+        <span className="text-[12px] font-semibold text-[#4E5968] truncate pr-2">
+          {order.items[0].type}, {simplifyMaterial(order.items[0].material)} {isMultiItem && <span className="text-[#B0B8C1] font-normal ml-0.5">외 {order.items.length - 1}</span>}
+        </span>
+        <div className="text-[11px] font-semibold text-[#8B95A1] whitespace-nowrap">
+          <span>{formatDate(order.deadline)}</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// 리스트 뷰 Row
+const OrderRow = ({ order, isSelected, onSelect, onAssign, onDetailClick }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const isMultiItem = order.items.length > 1;
   const mainStatus = getAggregatedStatus(order.items);
@@ -203,19 +628,20 @@ const OrderRow = ({ order, isSelected, onSelect, onAssign }) => {
           </div>
         </td>
 
-        {/* === 좌측 그룹: 환자, 보철, 치식 === */}
-        {/* 환자 및 치과 (2줄) */}
+        {/* 환자 및 치과 (상세보기 클릭 이벤트 포함) */}
         <td className="py-4 align-top">
           <div className="flex flex-col gap-0.5 mt-0.5">
-            <div className="flex items-center gap-1.5">
+            <div
+              className="flex items-center gap-1.5 cursor-pointer hover:underline decoration-[#3182F6]/50 underline-offset-2 w-fit"
+              onClick={(e) => { e.stopPropagation(); onDetailClick(order); }}
+            >
               <span className={`text-[13px] font-semibold tracking-tight transition-colors ${isSelected ? 'text-[#3182F6]' : 'text-[#333D4B]'}`}>{order.patient}</span>
-              {isMultiItem && <span className="text-[10px] font-semibold bg-blue-50 text-[#3182F6] px-1.5 py-0.5 rounded-[6px]">복합</span>}
+              {isMultiItem && <span className="text-[10px] font-semibold bg-blue-50 text-[#3182F6] px-1.5 py-0.5 rounded-[8px]">복합</span>}
             </div>
             <span className="text-[12px] text-[#8B95A1] font-medium">{order.clinic}</span>
           </div>
         </td>
 
-        {/* 보철 정보 (Material, 2줄) */}
         <td className="py-4 align-top">
           <div className="flex flex-col gap-0.5 mt-0.5">
             {isMultiItem ? (
@@ -232,7 +658,6 @@ const OrderRow = ({ order, isSelected, onSelect, onAssign }) => {
           </div>
         </td>
 
-        {/* 치식 (Teeth) */}
         <td className="py-4 align-top">
           <div className="mt-1 min-h-[24px] flex items-center">
             {isMultiItem ? (
@@ -240,22 +665,19 @@ const OrderRow = ({ order, isSelected, onSelect, onAssign }) => {
             ) : (
               <div className="flex flex-wrap gap-1">
                 {order.items[0].teeth.map(t => (
-                  <span key={t} className="text-[10px] font-semibold text-[#3182F6] bg-blue-50 px-1.5 py-0.5 rounded-[4px]">{t}</span>
+                  <span key={t} className="text-[10px] font-semibold text-[#3182F6] bg-blue-50 px-1.5 py-0.5 rounded-[6px]">{t}</span>
                 ))}
               </div>
             )}
           </div>
         </td>
 
-        {/* === 우측 그룹: 상태, 작업자, 마감일, 관리 === */}
-        {/* 진행 상태 (Status) */}
         <td className="py-4 align-top">
           <div className="mt-1 flex justify-center">
             <StatusBadge status={mainStatus} />
           </div>
         </td>
 
-        {/* 작업자 (Technician) */}
         <td className="py-4 align-top">
           <div className="mt-1 flex justify-center">
             {isMultiItem ? (
@@ -270,14 +692,12 @@ const OrderRow = ({ order, isSelected, onSelect, onAssign }) => {
           </div>
         </td>
 
-        {/* 마감일 (Deadline) */}
         <td className="py-4 align-top">
           <div className={`mt-1 flex justify-center items-center gap-1.5 text-[13px] font-semibold ${order.priority === 'urgent' || order.priority === 'high' ? 'text-[#F04452]' : 'text-[#8B95A1]'}`}>
             <span>{formatDate(order.deadline)}</span>
           </div>
         </td>
 
-        {/* 관리 (Quick Actions) */}
         <td className="py-4 align-top">
           <div className="mt-0.5 flex items-center justify-center gap-1">
             <button onClick={(e) => { e.stopPropagation(); }} className="p-1.5 text-[#8B95A1] hover:text-[#3182F6] hover:bg-blue-50 rounded-[10px] transition-all">
@@ -300,7 +720,6 @@ const OrderRow = ({ order, isSelected, onSelect, onAssign }) => {
         </td>
       </motion.tr>
 
-      {/* Accordion Content for Multi-item */}
       <AnimatePresence initial={false}>
         {isExpanded && isMultiItem && (
           <tr className="bg-[#F9FAFB] border-b border-[#F2F4F6] relative z-0">
@@ -314,48 +733,32 @@ const OrderRow = ({ order, isSelected, onSelect, onAssign }) => {
                 <div className="pl-14 py-4 pr-0 space-y-2">
                   {order.items.map((item, idx) => (
                     <div key={idx} className="flex items-center py-2.5">
-
-                      {/* 환자명 빈 공간 (부모 컬럼폭 180px와 일치하게 스킵) */}
                       <div className="w-[180px]"></div>
-
-                      {/* 보철 정보 (헤더 w-240px와 정확히 일치) */}
                       <div className="w-[240px]">
                         <div className="flex flex-col gap-0.5">
                           <span className="text-[13px] font-medium text-[#333D4B]">{item.material}</span>
                           <span className="text-[11px] font-medium text-[#8B95A1]">{item.type}</span>
                         </div>
                       </div>
-
-                      {/* 치식 (나머지 영역 모두 차지) */}
                       <div className="flex-1 flex items-center pr-4">
                         <div className="flex flex-wrap gap-1">
                           {item.teeth.map(t => <span key={t} className="text-[10px] font-semibold text-[#3182F6] bg-blue-50/70 px-1.5 py-0.5 rounded-[8px]">{t}</span>)}
                         </div>
                       </div>
-
-                      {/* 우측 진행 관리 영역 (상위 헤더 130px * 4 정확히 일치) */}
                       <div className="flex items-center">
-                        {/* 진행 상태 */}
                         <div className="w-[130px] flex justify-center">
                           <StatusBadge status={item.status} />
                         </div>
-
-                        {/* 작업자 */}
                         <div className="w-[130px] flex justify-center relative z-20">
                           <TechnicianSelect name={item.technician} onAssign={(tch) => onAssign(order.id, idx, tch)} />
                         </div>
-
-                        {/* 마감일 공백 */}
                         <div className="w-[130px]"></div>
-
-                        {/* 관리 */}
                         <div className="w-[130px] flex justify-center gap-1">
                           <button className="p-1.5 text-[#D1D6DB] hover:text-[#4E5968] rounded-[8px] transition-all hover:bg-[#F2F4F6]">
                             <Edit2 size={13} />
                           </button>
                         </div>
                       </div>
-
                     </div>
                   ))}
                 </div>
@@ -368,80 +771,16 @@ const OrderRow = ({ order, isSelected, onSelect, onAssign }) => {
   );
 };
 
-// 카드 뷰
-const OrderCard = ({ order, isSelected, onSelect, onAssign }) => {
-  const mainStatus = getAggregatedStatus(order.items);
-  const isMultiItem = order.items.length > 1;
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.2 }}
-      className={`p-5 rounded-[16px] flex flex-col justify-between transition-colors group relative border border-transparent ${isSelected ? 'bg-blue-50/60 border-blue-200' : 'bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)]'}`}
-    >
-      <div className="absolute top-5 left-5">
-        <Checkbox checked={isSelected} onChange={onSelect} />
-      </div>
-      <div className="pl-8">
-        <div className="flex justify-between items-start mb-3">
-          <StatusBadge status={mainStatus} />
-          <div className="flex gap-1">
-            <button onClick={(e) => e.stopPropagation()} className="p-1 text-[#B0B8C1] hover:text-[#3182F6] transition-colors"><Printer size={14} /></button>
-            <button onClick={(e) => e.stopPropagation()} className="p-1 text-[#D1D6DB] hover:text-[#4E5968] transition-colors"><MoreVertical size={14} /></button>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-0.5 mb-4">
-          <div className="flex items-center gap-2">
-            <h4 className={`text-[15px] font-bold tracking-tight transition-colors ${isSelected ? 'text-[#3182F6]' : 'text-[#333D4B]'}`}>{order.patient}</h4>
-            {isMultiItem && <span className="text-[10px] bg-blue-50 text-[#3182F6] px-1.5 py-0.5 rounded-[6px] font-semibold">복합</span>}
-          </div>
-          <p className="text-[12px] text-[#8B95A1] font-medium">{order.clinic}</p>
-        </div>
-
-        <div className="flex flex-col gap-2 mb-4">
-          {order.items.map((item, idx) => (
-            <div key={idx} className="flex flex-col bg-[#F9FAFB] p-3 rounded-[10px] gap-2.5">
-              <div className="flex justify-between items-start">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[13px] font-medium text-[#333D4B]">{item.material}</span>
-                  <span className="text-[11px] font-medium text-[#8B95A1]">{item.type}</span>
-                </div>
-                <StatusBadge status={item.status} />
-              </div>
-              <div className="flex justify-between items-center bg-white p-2 rounded-[12px] border border-[#F2F4F6]">
-                <div className="flex flex-wrap gap-1">
-                  {item.teeth.map(t => <span key={t} className="text-[10px] font-semibold text-[#3182F6] bg-blue-50 px-1.5 py-0.5 rounded-[6px]">{t}</span>)}
-                </div>
-                <div className="relative z-10">
-                  <TechnicianSelect name={item.technician} onAssign={(tch) => onAssign(order.id, idx, tch)} />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="pt-3 border-t border-[#F2F4F6] flex justify-between items-center pl-8">
-        <span className="text-[12px] font-medium text-[#8B95A1]">마감일</span>
-        <div className={`text-[12px] font-bold tracking-tight ${order.priority === 'urgent' || order.priority === 'high' ? 'text-[#F04452]' : 'text-[#4E5968]'}`}>
-          <span>{formatDate(order.deadline)}</span>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
+// 메인 앱
 export default function App() {
   const [data, setData] = useState(INITIAL_DATA);
   const [viewMode, setViewMode] = useState('list');
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [activeTab, setActiveTab] = useState('전체');
   const [sortConfig, setSortConfig] = useState(null);
+
+  // 새로 추가된 상세 뷰용 상태
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const filteredData = useMemo(() => {
     let result = [...data].filter(order => {
@@ -479,19 +818,15 @@ export default function App() {
 
   const handleSelectItem = (id) => {
     const newSelected = new Set(selectedIds);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
     setSelectedIds(newSelected);
   };
 
   const handleSort = (key) => {
     let direction = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    } else if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+    else if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
       setSortConfig(null);
       return;
     }
@@ -521,7 +856,7 @@ export default function App() {
     <div className="min-h-screen bg-[#F2F4F6] text-[#333D4B] antialiased flex flex-col pt-0 pb-12">
       <header className="h-16 bg-white flex items-center justify-between px-8 sticky top-0 z-50">
         <div className="flex items-center gap-10">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setSelectedOrder(null)}>
             <div className="w-7 h-7 bg-[#3182F6] rounded-[10px] flex items-center justify-center text-white font-bold text-[12px]">D</div>
             <h1 className="text-[15px] font-semibold tracking-tight text-[#191F28]">Dental Lab</h1>
           </div>
@@ -544,195 +879,187 @@ export default function App() {
       </header>
 
       <main className="max-w-[1300px] w-full mx-auto p-8 flex-1">
-        <div className="flex justify-between items-end mb-6">
-          <div>
-            <h2 className="text-[20px] font-bold text-[#191F28] mb-1 tracking-tight">작업 현황 및 스케줄</h2>
-            <p className="text-[#8B95A1] text-[12px] font-medium">관리자의 빠른 판단과 실행을 돕는 통합 워크스페이스입니다.</p>
-          </div>
-          <div className="flex gap-2.5">
-            <div className="flex bg-white p-1 rounded-[14px] items-center relative">
-              <motion.div
-                layout
-                className="absolute bg-[#F2F4F6] rounded-xl z-0"
-                style={{
-                  width: 'calc(50% - 4px)',
-                  height: 'calc(100% - 8px)',
-                  left: viewMode === 'list' ? 4 : 'calc(50%)',
-                  top: 4
-                }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              />
-              <button onClick={() => setViewMode('list')} className={`p-2 rounded-xl transition-colors relative z-10 ${viewMode === 'list' ? 'text-[#3182F6]' : 'text-[#B0B8C1] hover:text-[#8B95A1]'}`}>
-                <List size={16} />
-              </button>
-              <button onClick={() => setViewMode('card')} className={`p-2 rounded-xl transition-colors relative z-10 ${viewMode === 'card' ? 'text-[#3182F6]' : 'text-[#B0B8C1] hover:text-[#8B95A1]'}`}>
-                <LayoutGrid size={16} />
-              </button>
-            </div>
-
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#D1D6DB]" size={13} />
-              <input
-                type="text"
-                placeholder="환자 또는 치과 검색"
-                className="pl-9 pr-4 py-3 bg-white rounded-[12px] text-[12px] w-48 focus:outline-none transition-all placeholder:text-[#D1D6DB] focus:ring-2 focus:ring-[#3182F6]/20"
-              />
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="bg-[#3281FA] text-white px-4 py-2 rounded-[12px] text-[13px] font-semibold"
+        <AnimatePresence mode="wait">
+          {selectedOrder ? (
+            <OrderDetailView
+              key="detail"
+              order={selectedOrder}
+              onBack={() => setSelectedOrder(null)}
+              onAssign={handleAssign}
+            />
+          ) : (
+            <motion.div
+              key="dashboard"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3 }}
             >
-              새 의뢰 등록
-            </motion.button>
-          </div>
-        </div>
-
-        <ManagementSummary data={data} />
-
-        <motion.section
-          layout
-          className={`rounded-[16px] transition-colors ${viewMode === 'list' ? 'bg-white overflow-hidden/removed' : 'bg-transparent'}`}
-        >
-          <div className={`px-6 py-4 flex flex-col gap-3 ${viewMode === 'list' ? 'bg-white rounded-t-[16px]' : 'mb-4 px-0'}`}>
-            <div className="flex justify-between items-center w-full">
-              <div className="flex bg-[#F2F4F6] p-1 rounded-[12px] relative">
-                {['전체', '요청됨', '제작중', '배송준비'].map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setActiveTab(t)}
-                    className={`relative px-5 py-1.5 text-[13px] font-semibold rounded-[8px] transition-colors z-10 ${activeTab === t ? 'text-[#3182F6]' : 'text-[#8B95A1] hover:text-[#4E5968]'}`}
-                  >
-                    {activeTab === t && (
-                      <motion.div
-                        layoutId="activeTabBadge"
-                        className="absolute inset-0 bg-white rounded-[8px]"
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                        style={{ zIndex: -1 }}
-                      />
-                    )}
-                    {t}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button className={`flex items-center gap-1.5 text-[12px] font-semibold text-[#8B95A1] hover:text-[#4E5968] px-3 py-1.5 rounded-xl transition-all ${viewMode === 'card' ? 'bg-white' : 'hover:bg-[#F2F4F6]'}`}>
-                  <Filter size={13} /> 필터
-                </button>
-              </div>
-            </div>
-
-            <AnimatePresence>
-              {selectedIds.size > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, height: 'auto', scale: 1 }}
-                  exit={{ opacity: 0, height: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
-                  <div className="flex items-center gap-2 pt-2">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex items-center gap-2 bg-[#3182F6] text-white px-3 py-2 rounded-[10px] text-[13px] font-semibold transition-all"
-                    >
-                      <User size={14} />
-                      <span>전체 {selectedIds.size}건 배정하기</span>
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex items-center gap-2 bg-[#F2F4F6] text-[#4E5968] px-3 py-2 rounded-[10px] text-[13px] font-semibold hover:bg-[#E5E8EB] transition-colors"
-                    >
-                      <Printer size={14} />
-                      <span>전체 {selectedIds.size}건 출력</span>
-                    </motion.button>
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <h2 className="text-[20px] font-bold text-[#191F28] mb-1 tracking-tight">작업 현황</h2>
+                  <p className="text-[#8B95A1] text-[12px] font-medium">관리자의 빠른 판단과 실행을 돕는 통합 워크스페이스입니다.</p>
+                </div>
+                <div className="flex gap-2.5">
+                  <div className="flex bg-white p-1 rounded-[14px] items-center relative border border-[#F2F4F6]">
+                    <motion.div
+                      layout
+                      className="absolute bg-[#F2F4F6] rounded-xl z-0"
+                      style={{ width: 'calc(50% - 4px)', height: 'calc(100% - 8px)', left: viewMode === 'list' ? 4 : 'calc(50%)', top: 4 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                    <button onClick={() => setViewMode('list')} className={`p-2 rounded-xl transition-colors relative z-10 ${viewMode === 'list' ? 'text-[#3182F6]' : 'text-[#B0B8C1] hover:text-[#8B95A1]'}`}>
+                      <List size={16} />
+                    </button>
+                    <button onClick={() => setViewMode('card')} className={`p-2 rounded-xl transition-colors relative z-10 ${viewMode === 'card' ? 'text-[#3182F6]' : 'text-[#B0B8C1] hover:text-[#8B95A1]'}`}>
+                      <LayoutGrid size={16} />
+                    </button>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
 
-          <AnimatePresence mode="wait">
-            {viewMode === 'list' ? (
-              <motion.div
-                key="list"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-b-[16px] pb-4"
-              >
-                <table className="w-full text-left table-fixed">
-                  <thead>
-                    <tr className="text-[12px] font-medium text-[#8B95A1] bg-[#F9FAFB]">
-                      <th className="py-3 pl-6 pr-3 w-14 border-b border-[#F2F4F6]">
-                        <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
-                      </th>
-                      <th className="py-3 border-b border-[#F2F4F6] w-[180px]">환자 및 치과</th>
-                      <th className="py-3 border-b border-[#F2F4F6] w-[240px]">보철 정보</th>
-                      <th className="py-3 border-b border-[#F2F4F6]">치식</th>
+                  <div className="relative">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#D1D6DB]" size={13} />
+                    <input
+                      type="text"
+                      placeholder="환자 또는 치과 검색"
+                      className="pl-9 pr-4 py-3 bg-white border border-[#F2F4F6] rounded-[12px] text-[12px] w-48 focus:outline-none transition-all placeholder:text-[#D1D6DB] focus:ring-2 focus:ring-[#3182F6]/20"
+                    />
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-[#3281FA] text-white px-4 py-2 rounded-[12px] text-[13px] font-semibold hover:bg-[#2b72d6]"
+                  >
+                    새 의뢰 등록
+                  </motion.button>
+                </div>
+              </div>
 
-                      {/* 우측 그룹 */}
-                      <th className="py-3 text-center border-b border-[#F2F4F6] w-[130px]">진행 상태</th>
-                      <th className="py-3 text-center border-b border-[#F2F4F6] w-[130px]">작업자</th>
-                      <th className="py-3 border-b border-[#F2F4F6] w-[130px]">
+              <ManagementSummary data={data} />
+
+              <section className="bg-white rounded-[16px] overflow-hidden">
+                <div className="px-6 py-4 flex flex-col gap-3 bg-white border-b border-[#F9FAFB]">
+                  <div className="flex justify-between items-center w-full">
+                    <div className="flex bg-[#F2F4F6] p-1 rounded-[12px] relative">
+                      {['전체', '요청됨', '제작중', '배송준비'].map((t) => (
                         <button
-                          onClick={() => handleSort('deadline')}
-                          className={`mx-auto flex items-center justify-center gap-1 hover:text-[#4E5968] transition-colors focus:outline-none w-full ${sortConfig?.key === 'deadline' ? 'text-[#3182F6]' : ''}`}
+                          key={t}
+                          onClick={() => setActiveTab(t)}
+                          className={`relative px-5 py-1.5 text-[13px] font-semibold rounded-[8px] transition-colors z-10 ${activeTab === t ? 'text-[#3182F6]' : 'text-[#8B95A1] hover:text-[#4E5968]'}`}
                         >
-                          마감일
-                          {sortConfig?.key === 'deadline' ? (
-                            sortConfig.direction === 'asc' ? <ArrowUp size={13} strokeWidth={2.5} /> : <ArrowDown size={13} strokeWidth={2.5} />
-                          ) : (
-                            <ChevronsUpDown size={13} className="text-[#D1D6DB]" />
+                          {activeTab === t && (
+                            <motion.div
+                              layoutId="activeTabBadge"
+                              className="absolute inset-0 bg-white rounded-[8px]"
+                              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                              style={{ zIndex: -1 }}
+                            />
                           )}
+                          {t}
                         </button>
-                      </th>
-                      <th className="py-3 text-center whitespace-nowrap border-b border-[#F2F4F6] w-[130px]">관리</th>
-                    </tr>
-                  </thead>
-                  <tbody className="">
-                    <AnimatePresence>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button className="flex items-center gap-1.5 text-[12px] font-semibold text-[#8B95A1] hover:text-[#4E5968] hover:bg-[#F2F4F6] px-3 py-1.5 rounded-xl transition-all">
+                        <Filter size={13} /> 필터
+                      </button>
+                    </div>
+                  </div>
+
+                  <AnimatePresence>
+                    {selectedIds.size > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                        exit={{ opacity: 0, height: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="flex items-center gap-2 pt-2">
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="flex items-center gap-2 bg-[#3182F6] text-white px-3 py-2 rounded-[10px] text-[13px] font-semibold transition-all hover:bg-[#2b72d6]"
+                          >
+                            <User size={14} />
+                            <span>전체 {selectedIds.size}건 배정하기</span>
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="flex items-center gap-2 bg-[#F2F4F6] text-[#4E5968] px-3 py-2 rounded-[10px] text-[13px] font-semibold hover:bg-[#E5E8EB] transition-colors"
+                          >
+                            <Printer size={14} />
+                            <span>전체 {selectedIds.size}건 출력</span>
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <div className="bg-white pb-4">
+                  {viewMode === 'list' ? (
+                    <table className="w-full text-left table-fixed">
+                      <thead>
+                        <tr className="text-[12px] font-medium text-[#8B95A1] bg-[#F9FAFB]">
+                          <th className="py-3 pl-6 pr-3 w-14 border-b border-[#F2F4F6]">
+                            <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
+                          </th>
+                          <th className="py-3 border-b border-[#F2F4F6] w-[180px]">환자 및 치과</th>
+                          <th className="py-3 border-b border-[#F2F4F6] w-[240px]">보철 정보</th>
+                          <th className="py-3 border-b border-[#F2F4F6]">치식</th>
+
+                          <th className="py-3 text-center border-b border-[#F2F4F6] w-[130px]">진행 상태</th>
+                          <th className="py-3 text-center border-b border-[#F2F4F6] w-[130px]">작업자</th>
+                          <th className="py-3 border-b border-[#F2F4F6] w-[130px]">
+                            <button
+                              onClick={() => handleSort('deadline')}
+                              className={`mx-auto flex items-center justify-center gap-1 hover:text-[#4E5968] transition-colors focus:outline-none w-full ${sortConfig?.key === 'deadline' ? 'text-[#3182F6]' : ''}`}
+                            >
+                              마감일
+                              {sortConfig?.key === 'deadline' ? (
+                                sortConfig.direction === 'asc' ? <ArrowUp size={13} strokeWidth={2.5} /> : <ArrowDown size={13} strokeWidth={2.5} />
+                              ) : (
+                                <ChevronsUpDown size={13} className="text-[#D1D6DB]" />
+                              )}
+                            </button>
+                          </th>
+                          <th className="py-3 text-center whitespace-nowrap border-b border-[#F2F4F6] w-[130px]">관리</th>
+                        </tr>
+                      </thead>
+                      <tbody className="">
+                        {filteredData.map(order => (
+                          <OrderRow
+                            key={order.id}
+                            order={order}
+                            isSelected={selectedIds.has(order.id)}
+                            onSelect={() => handleSelectItem(order.id)}
+                            onAssign={handleAssign}
+                            onDetailClick={setSelectedOrder}
+                          />
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="p-6 grid grid-cols-3 gap-4 bg-[#F9FAFB] border-t border-[#F2F4F6]">
                       {filteredData.map(order => (
-                        <OrderRow
+                        <OrderCard
                           key={order.id}
                           order={order}
                           isSelected={selectedIds.has(order.id)}
                           onSelect={() => handleSelectItem(order.id)}
                           onAssign={handleAssign}
+                          onDetailClick={setSelectedOrder}
                         />
                       ))}
-                    </AnimatePresence>
-                  </tbody>
-                </table>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="card"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-0"
-              >
-                <AnimatePresence>
-                  {filteredData.map(order => (
-                    <OrderCard
-                      key={order.id}
-                      order={order}
-                      isSelected={selectedIds.has(order.id)}
-                      onSelect={() => handleSelectItem(order.id)}
-                      onAssign={handleAssign}
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.section>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
