@@ -8,8 +8,16 @@ export const formatDate = (dateStr) => {
   return `${d.getMonth() + 1}.${d.getDate()}`;
 };
 
+export const formatKoreanDate = (dateStr) => {
+  if (!dateStr) return '-';
+  const parts = dateStr.includes('-') ? dateStr.split('-') : dateStr.split('.');
+  const month = parseInt(parts[1]);
+  const day = parseInt(parts[2]);
+  return `${month}월 ${day}일`;
+};
+
 export const getAggregatedStatus = (items) => {
-  const statusPriority = { '접수': 0, '제작중': 1, '검수완료': 2, '배송준비': 3 };
+  const statusPriority = { '요청됨': 0, '작업중': 1, '발송됨': 2, '수거완료': 3 };
   let minPriority = 4;
   let status = items[0].status;
   items.forEach(item => {
@@ -19,4 +27,42 @@ export const getAggregatedStatus = (items) => {
     }
   });
   return status;
+};
+
+// diff: 양수 = 남은 일수, 0 = 오늘, 음수 = 지남
+export const getDDayDiff = (dateStr) => {
+  const today = new Date('2024-10-27');
+  const target = new Date(dateStr);
+  return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+};
+
+// 구 API 호환용 (OrderCard, OrderDetailView)
+export const getDDay = (dateStr) => {
+  const diff = getDDayDiff(dateStr);
+  if (diff === 0) return '오늘 마감';
+  if (diff < 0) return `D+${Math.abs(diff)}`;
+  return `D-${diff}`;
+};
+
+// D-day 뱃지 레이블 (D-3 이내 또는 지난 건만 표시, 나머지 null)
+export const getDDayLabel = (dateStr) => {
+  const diff = getDDayDiff(dateStr);
+  if (diff === 0) return '오늘';
+  if (diff < 0) return `D+${Math.abs(diff)}`;
+  if (diff <= 3) return `D-${diff}`;
+  return null;
+};
+
+// 뱃지 색상: 오늘·지남 = 빨강, D-1~D-3 = 회색
+// dateStr(날짜 문자열) 또는 ddayLabel(문자열) 모두 수용
+export const getDDayStyle = (input) => {
+  // 날짜 문자열이면 diff 계산, 아니면 레이블 파싱
+  if (input && input.includes('-') && input.length > 4) {
+    const diff = getDDayDiff(input);
+    if (diff <= 0) return 'bg-[#FFF0F1] text-[#F04452]';
+    return 'bg-[#F2F4F6] text-[#8B95A1]';
+  }
+  // 레이블 문자열 (구 API 호환)
+  if (input === '오늘 마감' || (input && input.startsWith('D+'))) return 'bg-[#FFF0F1] text-[#F04452]';
+  return 'bg-[#F2F4F6] text-[#8B95A1]';
 };

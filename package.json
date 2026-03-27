@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
+    "agentation-mcp": "^1.2.0",
     "autoprefixer": "^10.4.27",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.0.1",

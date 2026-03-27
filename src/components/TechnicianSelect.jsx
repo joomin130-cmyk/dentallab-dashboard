@@ -22,6 +22,7 @@ const TechnicianSelect = ({ name, type = 'single', onAssign }) => {
       onSelect={onAssign}
       minWidth="w-24"
       align="center"
+      size="sm"
     />
   );
 };

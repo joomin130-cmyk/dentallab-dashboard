@@ -8,7 +8,8 @@ import { ChevronsUpDown } from 'lucide-react';
 // onSelect: (id) => void
 // minWidth: 드롭다운 최소 너비 (tailwind class)
 // align: 'left' | 'center' — 드롭다운 정렬 방향
-const DropdownMenu = ({ label, options, selected, onSelect, minWidth = 'w-24', align = 'center' }) => {
+// size: 'sm' | 'md' — 트리거 버튼 크기 (sm: 테이블 내 compact, md: 필터 바 크기)
+const DropdownMenu = ({ label, options, selected, onSelect, minWidth = 'w-24', align = 'center', size = 'md' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef(null);
 
@@ -24,16 +25,27 @@ const DropdownMenu = ({ label, options, selected, onSelect, minWidth = 'w-24', a
     ? 'left-1/2 -translate-x-1/2'
     : 'left-0';
 
+  const isActive = !!selected;
+
+  const sizeClass = size === 'sm'
+    ? 'px-2.5 py-[5px] gap-1'
+    : 'px-3 py-1.5 gap-1.5';
+  const textClass = size === 'sm' ? 'text-[12px]' : 'text-[13px]';
+  const iconSize = size === 'sm' ? 12 : 13;
+  const bgClass = isActive
+    ? 'bg-[#EBF3FF] hover:bg-[#dbeafe]'
+    : 'bg-[#F2F4F6] hover:bg-[#E5E8EB]';
+
   return (
     <div className="relative" ref={ref}>
       <button
         onClick={(e) => { e.stopPropagation(); setIsOpen(o => !o); }}
-        className="flex items-center justify-between gap-1.5 px-3 py-1.5 bg-[#F2F4F6] hover:bg-[#E5E8EB] transition-colors rounded-[8px]"
+        className={`flex items-center justify-between ${sizeClass} ${bgClass} transition-colors rounded-[8px]`}
       >
-        <span className={`text-[13px] font-semibold tracking-tight ${selected ? 'text-[#3182F6]' : 'text-[#4E5968]'}`}>
+        <span className={`${textClass} font-semibold tracking-tight ${isActive ? 'text-[#3182F6]' : 'text-[#4E5968]'}`}>
           {label}
         </span>
-        <ChevronsUpDown size={13} className="text-[#8B95A1]" strokeWidth={2.5} />
+        <ChevronsUpDown size={iconSize} className={isActive ? 'text-[#3182F6]' : 'text-[#8B95A1]'} strokeWidth={2.5} />
       </button>
 
       <AnimatePresence>

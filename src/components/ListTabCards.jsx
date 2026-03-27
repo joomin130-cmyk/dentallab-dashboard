@@ -6,20 +6,20 @@ const ListTabCards = ({ data, activeTab, setActiveTab }) => {
   const today = '2024-10-27';
 
   const stats = useMemo(() => {
-    const requested = data.filter(d => getAggregatedStatus(d.items) === '접수').length;
-    const unconfirmed = data.filter(d => getAggregatedStatus(d.items) === '접수' && d.items.some(i => i.technician === '미배정')).length;
-    const inProgress = data.filter(d => getAggregatedStatus(d.items) === '제작중').length;
-    const todayDeadline = data.filter(d => d.deadline === today).length;
-    const done = data.filter(d => getAggregatedStatus(d.items) === '배송준비').length;
+    const requested = data.filter(d => getAggregatedStatus(d.items) === '요청됨').length;
+    const inProgress = data.filter(d => getAggregatedStatus(d.items) === '작업중').length;
+    const shipped = data.filter(d => getAggregatedStatus(d.items) === '발송됨').length;
+    const done = data.filter(d => getAggregatedStatus(d.items) === '수거완료').length;
     const total = data.length;
-    return { requested, unconfirmed, inProgress, todayDeadline, done, total };
+    return { requested, inProgress, shipped, done, total };
   }, [data]);
 
   const tabs = [
-    { id: '전체', label: '전체', count: stats.total },
-    { id: '요청됨', label: '요청됨', count: stats.requested, badge: stats.unconfirmed > 0 ? `미확인 ${stats.unconfirmed}건` : null },
+    { id: '전체',   label: '전체',   count: stats.total },
+    { id: '요청됨', label: '요청됨', count: stats.requested },
     { id: '작업중', label: '작업중', count: stats.inProgress },
-    { id: '완료', label: '완료', count: stats.done },
+    { id: '발송됨', label: '발송됨', count: stats.shipped },
+    { id: '수거완료', label: '수거완료', count: stats.done },
   ];
 
   return (

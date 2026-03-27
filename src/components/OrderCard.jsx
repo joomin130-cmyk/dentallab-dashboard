@@ -2,12 +2,13 @@ import { motion } from 'framer-motion';
 import { MoreVertical } from 'lucide-react';
 import Checkbox from './Checkbox';
 import StatusBadge from './StatusBadge';
-import { getAggregatedStatus, simplifyMaterial, formatDate } from '../utils/helpers';
+import { getAggregatedStatus, simplifyMaterial, getDDay, getDDayStyle } from '../utils/helpers';
 
 const OrderCard = ({ order, isSelected, onSelect, onAssign, onDetailClick }) => {
   const allTeeth = Array.from(new Set(order.items.flatMap(item => item.teeth)));
   const mainStatus = getAggregatedStatus(order.items);
   const isMultiItem = order.items.length > 1;
+  const dday = getDDay(order.deadline);
 
   return (
     <motion.div
@@ -47,8 +48,10 @@ const OrderCard = ({ order, isSelected, onSelect, onAssign, onDetailClick }) => 
         <span className="text-[12px] font-semibold text-[#4E5968] truncate pr-2">
           {order.items[0].type}, {simplifyMaterial(order.items[0].material)} {isMultiItem && <span className="text-[#B0B8C1] font-normal ml-0.5">외 {order.items.length - 1}</span>}
         </span>
-        <div className="text-[11px] font-semibold text-[#8B95A1] whitespace-nowrap">
-          <span>{formatDate(order.deadline)}</span>
+        <div className="flex items-center">
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-[6px] ${getDDayStyle(dday)}`}>
+            {dday}
+          </span>
         </div>
       </div>
     </motion.div>
