@@ -64,7 +64,7 @@ const SidebarItem = ({ item, isOpen, isActive, onClick }) => {
         className={`
           relative flex items-center h-[42px] rounded-[12px] transition-colors overflow-hidden
           ${isOpen ? 'gap-3 px-3 pr-5' : 'w-[42px] justify-center gap-0'}
-          ${isActive ? 'text-gray-500' : 'text-[#A8B0BE] hover:text-[#4E5968] hover:bg-[#F2F4F6]'}
+          ${isActive ? 'text-[#3182F6]' : 'text-[#A8B0BE] hover:text-[#4E5968] hover:bg-[#F2F4F6]'}
         `}
       >
         {/* 활성 배경 pill */}
@@ -102,9 +102,9 @@ const Sidebar = ({ isOpen, onToggle, activeMenu, setActiveMenu }) => {
       initial={{ x: -20, opacity: 0 }}
       animate={{ x: 0, opacity: 1, width: isOpen ? SIDEBAR_OPEN_W : SIDEBAR_CLOSE_W }}
       transition={{
-        x: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] },
+        x:       { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] },
         opacity: { duration: 0.35 },
-        width: { type: 'spring', stiffness: 380, damping: 34 },
+        width:   { type: 'spring', stiffness: 380, damping: 34 },
       }}
       className="fixed left-0 top-0 bottom-0 bg-[#EBEDF0] border-r border-[#F2F4F6] z-50 flex flex-col overflow-hidden"
     >

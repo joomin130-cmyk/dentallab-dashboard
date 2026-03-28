@@ -4,9 +4,9 @@ import { ChevronsUpDown, RotateCcw } from 'lucide-react';
 import DropdownMenu from './DropdownMenu';
 
 const InlineFilters = ({ data, chipFilters, setChipFilters }) => {
-  const TODAY        = '2024-10-27';
-  const YESTERDAY    = '2024-10-26';
-  const THREE_DAYS   = '2024-10-24'; // 3일 전(포함) ~ 오늘
+  const TODAY        = '2026-03-28';
+  const YESTERDAY    = '2026-03-27';
+  const THREE_DAYS   = '2026-03-25'; // 3일 전(포함) ~ 오늘
 
   const [orderDateOpen, setOrderDateOpen] = useState(false);
   const [customDateInput, setCustomDateInput] = useState('');
@@ -26,8 +26,8 @@ const InlineFilters = ({ data, chipFilters, setChipFilters }) => {
     const yesterdayOrder  = data.filter(d => d.orderDate === YESTERDAY).length;
     const threeDaysOrder  = data.filter(d => d.orderDate >= THREE_DAYS).length;
     const todayDL         = data.filter(d => d.deadline === TODAY).length;
-    const tomorrowDL      = data.filter(d => d.deadline === '2024-10-28').length;
-    const weekDL          = data.filter(d => d.deadline >= '2024-10-27' && d.deadline <= '2024-11-02').length;
+    const tomorrowDL      = data.filter(d => d.deadline === '2026-03-29').length;
+    const weekDL          = data.filter(d => d.deadline >= '2026-03-28' && d.deadline <= '2026-04-03').length;
     const clinicCounts    = {};
     const typeCounts      = {};
     data.forEach(d => {

@@ -17,6 +17,8 @@ import OrderDetailView from './components/OrderDetailView';
 import Toast from './components/Toast';
 import Pagination from './components/Pagination';
 import Sidebar, { SIDEBAR_OPEN_W, SIDEBAR_CLOSE_W, IconAlarm } from './components/Sidebar';
+import Banner from './components/Banner';
+import CalendarWidget from './components/CalendarWidget';
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -31,6 +33,8 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 5;
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [calendarDate, setCalendarDate] = useState(null);
+  const [calendarMode, setCalendarMode] = useState('deadline');
   const [toast, setToast] = useState(null);
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
   const bulkAssignRef = useRef(null);
@@ -48,12 +52,12 @@ export default function App() {
   }, [bulkAssignOpen]);
 
   const filteredData = useMemo(() => {
-    const today = '2024-10-27';
-    const yesterday = '2024-10-26';
-    const threeDaysAgo = '2024-10-24';
-    const tomorrow = '2024-10-28';
-    const startOfWeek = '2024-10-27';
-    const endOfWeek = '2024-11-02';
+    const today = '2026-03-28';
+    const yesterday = '2026-03-27';
+    const threeDaysAgo = '2026-03-25';
+    const tomorrow = '2026-03-29';
+    const startOfWeek = '2026-03-23';
+    const endOfWeek = '2026-03-29';
     const result = [...data].filter(order => {
       const mainStatus = getAggregatedStatus(order.items);
       if (activeTab === '요청됨' && mainStatus !== '요청됨') return false;
@@ -75,6 +79,12 @@ export default function App() {
 
       // 보철 종류 필터
       if (chipFilters.prostheticsType && !order.items.some(i => i.type === chipFilters.prostheticsType)) return false;
+      // 캘린더 날짜 선택 필터
+      if (calendarDate) {
+        const field = calendarMode === 'deadline' ? 'deadline' : 'orderDate';
+        if (order[field] !== calendarDate) return false;
+      }
+
       if (searchQuery.trim()) {
         const q = searchQuery.trim().toLowerCase();
         const matchPatient = order.patient?.toLowerCase().includes(q);
@@ -87,8 +97,8 @@ export default function App() {
     if (sortConfig !== null) {
       result.sort((a, b) => {
         const key = sortConfig.key === 'orderDate' ? 'orderDate' : 'deadline';
-        const dateA = new Date(a[key] || '2024-10-28');
-        const dateB = new Date(b[key] || '2024-10-28');
+        const dateA = new Date(a[key] || '2026-03-28');
+        const dateB = new Date(b[key] || '2026-03-28');
         if (dateA < dateB) return sortConfig.direction === 'asc' ? -1 : 1;
         if (dateA > dateB) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
@@ -96,7 +106,7 @@ export default function App() {
     }
 
     return result;
-  }, [data, activeTab, sortConfig, chipFilters, searchQuery]);
+  }, [data, activeTab, sortConfig, chipFilters, searchQuery, calendarDate, calendarMode]);
 
   const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
   const paginatedData = useMemo(() => {
@@ -218,7 +228,7 @@ export default function App() {
           className="flex items-center cursor-pointer pl-4 pr-4"
           onClick={() => { setActiveMenu('work'); setSelectedOrder(null); }}
         >
-          <img src="/logo.svg" alt="diil logo" className="h-[38px] w-auto" />
+          <img src="/logo.svg" alt="diil logo" className="h-[34px] w-auto" />
         </div>
 
         {/* [B] 검색바 — 헤더 내 중앙 */}
@@ -255,7 +265,7 @@ export default function App() {
         transition={{ type: 'spring', stiffness: 380, damping: 34 }}
         className="pt-16 min-h-screen"
       >
-        <main className="max-w-[1300px] w-full mx-auto p-8 pb-12 flex-1">
+        <main className="max-w-none w-full mx-auto p-10 flex-1">
           {/* 작업 관리가 아닌 메뉴 → 준비 중 placeholder */}
           {activeMenu === 'schedule' && <PlaceholderPage label="일정 현황" icon={CalendarDays} />}
           {activeMenu === 'clients' && <PlaceholderPage label="거래처" icon={Building2} />}
@@ -284,180 +294,189 @@ export default function App() {
                     </div>
                   </motion.div>
 
-                  <motion.section variants={fadeUp} className="bg-white rounded-[16px] overflow-x-auto">
-                    <div className="min-w-[1100px]">
-                      <div className="px-6 py-5 flex flex-col gap-3 bg-white border-b border-[#F9FAFB]">
-                        <motion.div variants={fadeUpSubtle} className="flex justify-between items-center w-full">
-                          <ListTabCards data={data} activeTab={activeTab} setActiveTab={setActiveTab} />
-                        </motion.div>
-                        <motion.div variants={fadeUpSubtle} className="flex items-center justify-between gap-4">
-                          <InlineFilters data={data} chipFilters={chipFilters} setChipFilters={setChipFilters} />
-                          <div className="relative flex-shrink-0">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D1D6DB]" size={13} />
-                            <input
-                              type="text"
-                              value={searchQuery}
-                              onChange={e => setSearchQuery(e.target.value)}
-                              placeholder="환자 또는 치과 검색"
-                              className="pl-8 pr-4 py-2 bg-[#F2F4F6] border-none rounded-[10px] text-[12px] w-44 focus:outline-none focus:ring-2 focus:ring-[#3182F6]/20 focus:bg-white transition-all placeholder:text-[#B0B8C1]"
-                            />
-                          </div>
-                        </motion.div>
-                      </div>
 
-                      <AnimatePresence initial={false}>
-                        {selectedIds.size > 0 && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2, ease: [0.04, 0.62, 0.23, 0.98] }}
-                            className="overflow-hidden"
-                          >
-                            <div className="px-6 py-3 bg-white flex items-center gap-2">
-                              <motion.button
-                                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                                className="flex items-center gap-2 bg-[#F2F4F6] text-[#4E5968] px-3 py-1.5 rounded-[10px] text-[13px] font-semibold hover:bg-[#F9FAFB] transition-colors"
-                              >
-                                <Printer size={14} />
-                                <span>선택한 {selectedIds.size}건 출력하기</span>
-                              </motion.button>
-                              <div className="relative" ref={bulkAssignRef}>
-                                <motion.button
-                                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                                  onClick={() => setBulkAssignOpen(o => !o)}
-                                  className="flex items-center gap-2 bg-[#3182F6] text-white px-3 py-1.5 rounded-[10px] text-[13px] font-semibold transition-colors hover:bg-[#2b72d6]"
-                                >
-                                  <User size={14} />
-                                  <span>전체 {selectedIds.size}건 배정하기</span>
-                                  <ChevronsUpDown size={13} className="opacity-70" strokeWidth={2.5} />
-                                </motion.button>
-                                <AnimatePresence>
-                                  {bulkAssignOpen && (
-                                    <motion.div
-                                      initial={{ opacity: 0, y: -4, scale: 0.95 }}
-                                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                                      exit={{ opacity: 0, y: -4, scale: 0.95 }}
-                                      transition={{ duration: 0.15 }}
-                                      className="absolute top-full left-0 mt-1 w-32 bg-white rounded-[12px] shadow-[0_4px_20px_rgba(0,0,0,0.08)] py-1.5 z-[100]"
-                                    >
-                                      {TECHNICIANS.filter(t => t !== '미배정').map(tech => (
-                                        <button
-                                          key={tech}
-                                          onClick={() => handleBulkAssign(tech)}
-                                          className="w-full text-left px-4 py-2 text-[13px] font-semibold text-[#4E5968] hover:bg-[#F2F4F6] transition-colors"
-                                        >
-                                          {tech}
-                                        </button>
-                                      ))}
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </div>
+                  <motion.div variants={fadeUp} className="flex gap-4 items-start">
+                    <motion.section className="bg-white rounded-[16px] overflow-x-auto flex-1 min-w-0">
+                      <div className="min-w-[940px]">
+                        <div className="px-6 py-5 flex flex-col gap-3 bg-white border-b border-[#F9FAFB]">
+                          <motion.div variants={fadeUpSubtle} className="flex justify-between items-center w-full">
+                            <ListTabCards data={data} activeTab={activeTab} setActiveTab={setActiveTab} />
+                          </motion.div>
+                          <motion.div variants={fadeUpSubtle} className="flex items-center justify-between gap-4">
+                            <InlineFilters data={data} chipFilters={chipFilters} setChipFilters={setChipFilters} />
+                            <div className="relative flex-shrink-0">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D1D6DB]" size={13} />
+                              <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                placeholder="환자 또는 치과 검색"
+                                className="pl-8 pr-4 py-2 bg-[#F2F4F6] border-none rounded-[10px] text-[12px] w-44 focus:outline-none focus:ring-2 focus:ring-[#3182F6]/20 focus:bg-white transition-all placeholder:text-[#B0B8C1]"
+                              />
                             </div>
                           </motion.div>
-                        )}
-                      </AnimatePresence>
+                        </div>
 
-                      <div className="bg-white pb-4 min-h-[480px]">
-                        {viewMode === 'list' ? (
-                          <table className="w-full text-left table-fixed border-separate border-spacing-y-1 border-spacing-x-0">
-                            <thead>
-                              <tr className="text-[12px] font-semibold text-[#8B95A1] bg-[#F9FAFB]">
-                                <th className="py-3 pl-6 pr-3 w-14 border-b border-[#F2F4F6]">
-                                  <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
-                                </th>
-                                <th className="py-3 border-b border-[#F2F4F6] w-[260px]">환자</th>
-                                <th className="py-3 border-b border-[#F2F4F6] w-[160px]">치식</th>
-                                <th className="py-3 border-b border-[#F2F4F6] w-[140px]">
-                                  <button
-                                    onClick={() => handleSort('orderDate')}
-                                    className={`inline-flex items-center gap-1 hover:text-[#4E5968] transition-colors focus:outline-none ${sortConfig?.key === 'orderDate' ? 'text-[#3182F6]' : ''}`}
+                        <AnimatePresence initial={false}>
+                          {selectedIds.size > 0 && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2, ease: [0.04, 0.62, 0.23, 0.98] }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-6 py-3 bg-white flex items-center gap-2">
+                                <motion.button
+                                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                                  className="flex items-center gap-2 bg-[#F2F4F6] text-[#4E5968] px-3 py-1.5 rounded-[10px] text-[13px] font-semibold hover:bg-[#F9FAFB] transition-colors"
+                                >
+                                  <Printer size={14} />
+                                  <span>선택한 {selectedIds.size}건 출력하기</span>
+                                </motion.button>
+                                <div className="relative" ref={bulkAssignRef}>
+                                  <motion.button
+                                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                                    onClick={() => setBulkAssignOpen(o => !o)}
+                                    className="flex items-center gap-2 bg-[#3182F6] text-white px-3 py-1.5 rounded-[10px] text-[13px] font-semibold transition-colors hover:bg-[#2b72d6]"
                                   >
-                                    접수일
-                                    {sortConfig?.key === 'orderDate' ? (
-                                      sortConfig.direction === 'asc' ? <ArrowUp size={13} strokeWidth={2.5} /> : <ArrowDown size={13} strokeWidth={2.5} />
-                                    ) : (
-                                      <ChevronsUpDown size={13} className="text-[#D1D6DB]" />
+                                    <User size={14} />
+                                    <span>전체 {selectedIds.size}건 배정하기</span>
+                                    <ChevronsUpDown size={13} className="opacity-70" strokeWidth={2.5} />
+                                  </motion.button>
+                                  <AnimatePresence>
+                                    {bulkAssignOpen && (
+                                      <motion.div
+                                        initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="absolute top-full left-0 mt-1 w-32 bg-white rounded-[12px] shadow-[0_4px_20px_rgba(0,0,0,0.08)] py-1.5 z-[100]"
+                                      >
+                                        {TECHNICIANS.filter(t => t !== '미배정').map(tech => (
+                                          <button
+                                            key={tech}
+                                            onClick={() => handleBulkAssign(tech)}
+                                            className="w-full text-left px-4 py-2 text-[13px] font-semibold text-[#4E5968] hover:bg-[#F2F4F6] transition-colors"
+                                          >
+                                            {tech}
+                                          </button>
+                                        ))}
+                                      </motion.div>
                                     )}
-                                  </button>
-                                </th>
-                                <th className="py-3 border-b border-[#F2F4F6] w-[140px]">
-                                  <button
-                                    onClick={() => handleSort('deadline')}
-                                    className={`inline-flex items-center gap-1 hover:text-[#4E5968] transition-colors focus:outline-none ${sortConfig?.key === 'deadline' ? 'text-[#3182F6]' : ''}`}
-                                  >
-                                    마감일
-                                    {sortConfig?.key === 'deadline' ? (
-                                      sortConfig.direction === 'asc' ? <ArrowUp size={13} strokeWidth={2.5} /> : <ArrowDown size={13} strokeWidth={2.5} />
-                                    ) : (
-                                      <ChevronsUpDown size={13} className="text-[#D1D6DB]" />
-                                    )}
-                                  </button>
-                                </th>
-                                <th className="py-3 border-b border-[#F2F4F6] w-[140px]">상태</th>
-                                <th className="py-3 border-b border-[#F2F4F6] w-[140px]">작업자</th>
-                                <th className="py-3 border-b border-[#F2F4F6] w-[88px]"></th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {paginatedData.length === 0 ? (
-                                <tr>
-                                  <td colSpan="8">
-                                    <div className="flex flex-col items-center justify-center py-20 gap-3">
-                                      <span className="text-[40px] leading-none">🔍</span>
-                                      <p className="text-[14px] font-semibold text-[#4E5968]">조건에 맞는 의뢰가 없어요</p>
-                                      <p className="text-[13px] text-[#8B95A1]">필터를 변경하거나 전체 해제해 주세요</p>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ) : paginatedData.map((order, idx) => (
-                                <OrderRow
-                                  key={order.id}
-                                  order={order}
-                                  index={idx}
-                                  isSelected={selectedIds.has(order.id)}
-                                  onSelect={() => handleSelectItem(order.id)}
-                                  onAssign={handleAssign}
-                                  onStatusChange={handleStatusChange}
-                                  onDetailClick={setSelectedOrder}
-                                />
-                              ))}
-                            </tbody>
-                          </table>
-                        ) : (
-                          <div className="p-6">
-                            {paginatedData.length === 0 ? (
-                              <div className="flex flex-col items-center justify-center py-20 gap-3 bg-[#F9FAFB] border border-[#F2F4F6] rounded-[16px]">
-                                <span className="text-[40px] leading-none">🔍</span>
-                                <p className="text-[14px] font-semibold text-[#4E5968]">조건에 맞는 의뢰가 없어요</p>
-                                <p className="text-[13px] text-[#8B95A1]">필터를 변경하거나 전체 해제해 주세요</p>
+                                  </AnimatePresence>
+                                </div>
                               </div>
-                            ) : (
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {paginatedData.map(order => (
-                                  <OrderCard
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        <div className="bg-white pb-4 min-h-[480px]">
+                          {viewMode === 'list' ? (
+                            <table className="w-full text-left table-fixed border-separate border-spacing-y-[6px] border-spacing-x-0">
+                              <thead>
+                                <tr className="text-[12px] font-semibold text-[#8B95A1] bg-[#F9FAFB]">
+                                  <th className="py-3 pl-6 pr-3 w-14 border-b border-[#F2F4F6]">
+                                    <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
+                                  </th>
+                                  <th className="py-3 border-b border-[#F2F4F6] w-[220px]">환자</th>
+                                  <th className="py-3 border-b border-[#F2F4F6] w-[130px]">치식</th>
+                                  <th className="py-3 border-b border-[#F2F4F6] w-[110px]">
+                                    <button
+                                      onClick={() => handleSort('orderDate')}
+                                      className={`inline-flex items-center gap-1 hover:text-[#4E5968] transition-colors focus:outline-none ${sortConfig?.key === 'orderDate' ? 'text-[#3182F6]' : ''}`}
+                                    >
+                                      접수일
+                                      {sortConfig?.key === 'orderDate' ? (
+                                        sortConfig.direction === 'asc' ? <ArrowUp size={13} strokeWidth={2.5} /> : <ArrowDown size={13} strokeWidth={2.5} />
+                                      ) : (
+                                        <ChevronsUpDown size={13} className="text-[#D1D6DB]" />
+                                      )}
+                                    </button>
+                                  </th>
+                                  <th className="py-3 border-b border-[#F2F4F6] w-[120px]">
+                                    <button
+                                      onClick={() => handleSort('deadline')}
+                                      className={`inline-flex items-center gap-1 hover:text-[#4E5968] transition-colors focus:outline-none ${sortConfig?.key === 'deadline' ? 'text-[#3182F6]' : ''}`}
+                                    >
+                                      마감일
+                                      {sortConfig?.key === 'deadline' ? (
+                                        sortConfig.direction === 'asc' ? <ArrowUp size={13} strokeWidth={2.5} /> : <ArrowDown size={13} strokeWidth={2.5} />
+                                      ) : (
+                                        <ChevronsUpDown size={13} className="text-[#D1D6DB]" />
+                                      )}
+                                    </button>
+                                  </th>
+                                  <th className="py-3 border-b border-[#F2F4F6] w-[110px]">상태</th>
+                                  <th className="py-3 border-b border-[#F2F4F6] w-[130px]">작업자</th>
+                                  <th className="py-3 border-b border-[#F2F4F6] w-[80px]"></th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {paginatedData.length === 0 ? (
+                                  <tr>
+                                    <td colSpan="8">
+                                      <div className="flex flex-col items-center justify-center py-20 gap-3">
+                                        <span className="text-[40px] leading-none">🔍</span>
+                                        <p className="text-[14px] font-semibold text-[#4E5968]">조건에 맞는 의뢰가 없어요</p>
+                                        <p className="text-[13px] text-[#8B95A1]">필터를 변경하거나 전체 해제해 주세요</p>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ) : paginatedData.map((order, idx) => (
+                                  <OrderRow
                                     key={order.id}
                                     order={order}
+                                    index={idx}
                                     isSelected={selectedIds.has(order.id)}
                                     onSelect={() => handleSelectItem(order.id)}
                                     onAssign={handleAssign}
+                                    onStatusChange={handleStatusChange}
                                     onDetailClick={setSelectedOrder}
                                   />
                                 ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <div className="p-6">
+                              {paginatedData.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-20 gap-3 bg-[#F9FAFB] border border-[#F2F4F6] rounded-[16px]">
+                                  <span className="text-[40px] leading-none">🔍</span>
+                                  <p className="text-[14px] font-semibold text-[#4E5968]">조건에 맞는 의뢰가 없어요</p>
+                                  <p className="text-[13px] text-[#8B95A1]">필터를 변경하거나 전체 해제해 주세요</p>
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                  {paginatedData.map(order => (
+                                    <OrderCard
+                                      key={order.id}
+                                      order={order}
+                                      isSelected={selectedIds.has(order.id)}
+                                      onSelect={() => handleSelectItem(order.id)}
+                                      onAssign={handleAssign}
+                                      onDetailClick={setSelectedOrder}
+                                    />
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
 
-                        <Pagination
-                          currentPage={currentPage}
-                          totalPages={totalPages}
-                          setCurrentPage={setCurrentPage}
-                        />
+                          <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            setCurrentPage={setCurrentPage}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </motion.section>
+                    </motion.section>
+
+                    <CalendarWidget
+                      data={data}
+                      selectedDate={calendarDate}
+                      onSelectDate={(d, m) => { setCalendarDate(d); if (m) setCalendarMode(m); setCurrentPage(1); }}
+                    />
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>

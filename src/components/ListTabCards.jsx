@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { getAggregatedStatus } from '../utils/helpers';
 
 const ListTabCards = ({ data, activeTab, setActiveTab }) => {
-  const today = '2024-10-27';
+  const today = '2026-03-28';
 
   const stats = useMemo(() => {
     const requested = data.filter(d => getAggregatedStatus(d.items) === '요청됨').length;

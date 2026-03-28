@@ -45,8 +45,8 @@ const OrderRow = ({ order, index = 0, isSelected, onSelect, onAssign, onStatusCh
         whileHover={isCard ? {} : { scale: 0.995 }}
         transition={{
           opacity: { duration: 0.32, delay: 0.36 + index * 0.045, ease: [0.25, 0.46, 0.45, 0.94] },
-          y:       { duration: 0.32, delay: 0.36 + index * 0.045, ease: [0.25, 0.46, 0.45, 0.94] },
-          scale:   { duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] },
+          y: { duration: 0.32, delay: 0.36 + index * 0.045, ease: [0.25, 0.46, 0.45, 0.94] },
+          scale: { duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] },
         }}
         className="group relative z-10"
         onClick={() => { if (isMultiItem) setIsExpanded(!isExpanded); }}
@@ -153,7 +153,7 @@ const OrderRow = ({ order, index = 0, isSelected, onSelect, onAssign, onStatusCh
           <tr className="relative z-0">
             <td
               colSpan="8"
-              className="p-0 bg-[#F9FAFB] rounded-bl-[14px] rounded-br-[14px] relative -top-1"
+              className="p-0 bg-[#F9FAFB] rounded-bl-[14px] rounded-br-[14px] relative -top-[6px]"
             >
               <motion.div
                 initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
@@ -165,13 +165,13 @@ const OrderRow = ({ order, index = 0, isSelected, onSelect, onAssign, onStatusCh
                 <table className="w-full table-fixed border-separate border-spacing-0">
                   <colgroup>
                     <col className="w-14" />
-                    <col className="w-[260px]" />
-                    <col className="w-[160px]" />
-                    <col className="w-[140px]" />
-                    <col className="w-[140px]" />
-                    <col className="w-[140px]" />
-                    <col className="w-[140px]" />
-                    <col className="w-[88px]" />
+                    <col className="w-[220px]" />
+                    <col className="w-[130px]" />
+                    <col className="w-[110px]" />
+                    <col className="w-[120px]" />
+                    <col className="w-[110px]" />
+                    <col className="w-[130px]" />
+                    <col className="w-[80px]" />
                   </colgroup>
                   <tbody>
                     {order.items.map((item, idx) => (

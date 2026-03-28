@@ -31,7 +31,7 @@ export const getAggregatedStatus = (items) => {
 
 // diff: 양수 = 남은 일수, 0 = 오늘, 음수 = 지남
 export const getDDayDiff = (dateStr) => {
-  const today = new Date('2024-10-27');
+  const today = new Date('2026-03-28');
   const target = new Date(dateStr);
   return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
 };
