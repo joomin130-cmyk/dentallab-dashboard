@@ -276,12 +276,14 @@ export default function App() {
           {activeMenu === 'work' && (
             <AnimatePresence mode="wait">
               {selectedOrder ? (
-                <OrderDetailView
-                  key="detail"
-                  order={selectedOrder}
-                  onBack={() => setSelectedOrder(null)}
-                  onAssign={handleAssign}
-                />
+                /* 상세 의뢰: 뷰포트 딱 맞게 잘라서 외부 스크롤 방지 */
+                <div key="detail" className="h-[calc(100vh-104px)] overflow-hidden">
+                  <OrderDetailView
+                    order={selectedOrder}
+                    onBack={() => setSelectedOrder(null)}
+                    onAssign={handleAssign}
+                  />
+                </div>
               ) : (
                 <motion.div
                   key="dashboard"
