@@ -11,9 +11,10 @@ export const formatDate = (dateStr) => {
 export const formatKoreanDate = (dateStr) => {
   if (!dateStr) return '-';
   const parts = dateStr.includes('-') ? dateStr.split('-') : dateStr.split('.');
+  const year = parseInt(parts[0]) % 100; // 4자리 → 2자리
   const month = parseInt(parts[1]);
   const day = parseInt(parts[2]);
-  return `${month}월 ${day}일`;
+  return `${year}년 ${month}월 ${day}일`;
 };
 
 export const getAggregatedStatus = (items) => {
