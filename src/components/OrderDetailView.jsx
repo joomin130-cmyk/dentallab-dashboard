@@ -234,8 +234,8 @@ const OrderDetailView = ({ order, onBack, onAssign }) => {
               {/* ★ 보험 배너 */}
               <div className="mb-5">
                 <Banner
-                  variant={isInsured ? 'success' : 'notice'}
-                  message={isInsured ? '보험 적용 대상 의뢰건입니다.' : '보험 미적용 의뢰건입니다.'}
+                  variant="neutral"
+                  message={`보험 적용 : ${isInsured ? '예' : '아니오'}`}
                 />
               </div>
 

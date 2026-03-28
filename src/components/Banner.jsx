@@ -1,4 +1,4 @@
-import { Sparkles, Info, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { Sparkles, Info, CheckCircle2, AlertCircle, X, Minus } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 /**
@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
  *
  * variant  | 용도                        | 배경
  * -------- | --------------------------- | --------------------------------
+ * neutral  | 중립 정보 표시 · 기본 안내   | 라이트 그레이 (가장 기본)
  * notice   | 기능 안내 · 인사이트 유도    | 보라 그라디언트 + shimmer 모션
  * warning  | 액션 필요 · 미완료 항목 안내 | 앰버 (주황)
  * success  | 완료 · 저장 성공 알림        | 에메랄드
@@ -54,6 +55,12 @@ const textMotion = {
 /* ── Variant 스타일 테이블 ────────────────────────────── */
 
 const VARIANTS = {
+  neutral: {
+    wrapper:    'bg-[#F2F4F6]',
+    text:       'text-[#4E5968]',
+    btnBase:    'bg-[#8B95A1] hover:bg-[#6B7684] text-white',
+    closeColor: 'text-[#8B95A1]',
+  },
   notice: {
     wrapper:    'bg-gradient-to-r from-[#EDE9FE] to-[#EBF0FA]',
     text:       'text-[#6D28D9]',
@@ -110,7 +117,12 @@ function ErrorIcon() {
   return <AlertCircle size={15} strokeWidth={2} className="text-[#F04452] shrink-0" />
 }
 
+function NeutralIcon() {
+  return <Minus size={15} strokeWidth={2.5} className="text-[#8B95A1] shrink-0" />
+}
+
 const ICONS = {
+  neutral: <NeutralIcon />,
   notice:  <NoticeIcon />,
   warning: <WarningIcon />,
   success: <SuccessIcon />,
@@ -128,18 +140,19 @@ export default function Banner({
   dismissible = false,
   onDismiss,
 }) {
-  const v        = VARIANTS[variant] ?? VARIANTS.notice
-  const icon     = ICONS[variant]    ?? ICONS.notice
-  const isNotice = variant === 'notice'
+  const v         = VARIANTS[variant] ?? VARIANTS.neutral
+  const icon      = ICONS[variant]    ?? ICONS.neutral
+  const isNotice  = variant === 'notice'
+  const isNeutral = variant === 'neutral'
 
   return (
     <motion.div
       /* notice: variant 시스템으로 진입 + hover + tap 통합 관리 */
       /* 그 외: 단순 진입 애니메이션만 */
       variants={isNotice ? bannerMotion : undefined}
-      initial={isNotice ? 'initial' : { opacity: 0, y: -8 }}
-      animate={isNotice ? 'rest'    : { opacity: 1, y:  0 }}
-      exit={{ opacity: 0, y: -8 }}
+      initial={isNotice ? 'initial' : isNeutral ? false : { opacity: 0, y: -8 }}
+      animate={isNotice ? 'rest'    : isNeutral ? {}    : { opacity: 1, y:  0 }}
+      exit={isNeutral ? {} : { opacity: 0, y: -8 }}
       transition={isNotice ? undefined : { duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
       whileHover={isNotice ? 'hover' : undefined}
       whileTap={isNotice && onClick ? 'tap' : undefined}
