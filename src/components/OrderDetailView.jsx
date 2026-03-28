@@ -135,6 +135,16 @@ const OrderDetailView = ({ order, onBack, onAssign }) => {
             </div>
           </div>
 
+          {/* 요청됨 상태 안내 배너 */}
+          {getAggregatedStatus(order.items) === '요청됨' && (
+            <div className="px-8 pt-5 pb-1">
+              <Banner
+                variant="warning"
+                message="치과에서 아직 내역을 수정할 수 있는 상태입니다. 작업 전 최종 내용을 확인해 주세요."
+              />
+            </div>
+          )}
+
           {/* Section 2: 보철 및 치식 정보 */}
           <div className="px-8 py-6 border-b border-[#F2F4F6]">
             <SectionLabel>보철 및 치식 정보</SectionLabel>
