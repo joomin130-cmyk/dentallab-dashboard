@@ -221,7 +221,7 @@ export default function App() {
           y: { duration: 0.4, delay: 0.08, ease: [0.25, 0.46, 0.45, 0.94] },
           left: { type: 'spring', stiffness: 380, damping: 34 },
         }}
-        className="h-16 bg-[#F2F4F6] fixed top-0 right-0 z-40 flex items-center"
+        className="h-14 bg-[#F2F4F6] fixed top-0 right-0 z-40 flex items-center"
       >
         {/* [A] 로고 SVG */}
         <div
@@ -287,9 +287,10 @@ export default function App() {
               ) : (
                 <motion.div
                   key="dashboard"
-                  variants={pageVariants} initial="hidden" animate="visible" exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
+                  initial={{ opacity: 1 }}
+                  exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
                 >
-                  <motion.div variants={fadeUp}>
+                  <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE, delay: 0.18 }}>
                     <div className="mb-6">
                       <h2 className="text-[20px] font-bold text-[#191F28] mb-1 tracking-tight">작업 현황</h2>
                       <p className="text-[#8B95A1] text-[12px] font-medium">관리자의 빠른 판단과 실행을 돕는 통합 워크스페이스입니다.</p>
@@ -297,14 +298,14 @@ export default function App() {
                   </motion.div>
 
 
-                  <motion.div variants={fadeUp} className="flex gap-4 items-start">
+                  <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE, delay: 0.25 }} className="flex gap-4 items-start">
                     <motion.section className="bg-white rounded-[16px] overflow-x-auto flex-1 min-w-0">
                       <div className="min-w-[940px]">
                         <div className="px-6 py-5 flex flex-col gap-3 bg-white border-b border-[#F9FAFB]">
-                          <motion.div variants={fadeUpSubtle} className="flex justify-between items-center w-full">
+                          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: EASE, delay: 0.32 }} className="flex justify-between items-center w-full">
                             <ListTabCards data={data} activeTab={activeTab} setActiveTab={setActiveTab} />
                           </motion.div>
-                          <motion.div variants={fadeUpSubtle} className="flex items-center justify-between gap-4">
+                          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: EASE, delay: 0.39 }} className="flex items-center justify-between gap-4">
                             <InlineFilters data={data} chipFilters={chipFilters} setChipFilters={setChipFilters} />
                             <div className="relative flex-shrink-0">
                               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D1D6DB]" size={13} />
