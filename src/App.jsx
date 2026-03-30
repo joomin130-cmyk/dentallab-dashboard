@@ -287,25 +287,21 @@ export default function App() {
               ) : (
                 <motion.div
                   key="dashboard"
-                  initial={{ opacity: 1 }}
                   exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
                 >
-                  <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE, delay: 0.18 }}>
-                    <div className="mb-6">
-                      <h2 className="text-[20px] font-bold text-[#191F28] mb-1 tracking-tight">작업 현황</h2>
-                      <p className="text-[#8B95A1] text-[12px] font-medium">관리자의 빠른 판단과 실행을 돕는 통합 워크스페이스입니다.</p>
-                    </div>
-                  </motion.div>
+                  <div className="mb-6">
+                    <h2 className="text-[20px] font-bold text-[#191F28] mb-1 tracking-tight">작업 현황</h2>
+                    <p className="text-[#8B95A1] text-[12px] font-medium">관리자의 빠른 판단과 실행을 돕는 통합 워크스페이스입니다.</p>
+                  </div>
 
-
-                  <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE, delay: 0.25 }} className="flex gap-4 items-start">
+                  <div className="flex gap-4 items-start">
                     <motion.section className="bg-white rounded-[16px] overflow-x-auto flex-1 min-w-0">
                       <div className="min-w-[940px]">
                         <div className="px-6 py-5 flex flex-col gap-3 bg-white border-b border-[#F9FAFB]">
-                          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: EASE, delay: 0.32 }} className="flex justify-between items-center w-full">
+                          <div className="flex justify-between items-center w-full">
                             <ListTabCards data={data} activeTab={activeTab} setActiveTab={setActiveTab} />
-                          </motion.div>
-                          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: EASE, delay: 0.39 }} className="flex items-center justify-between gap-4">
+                          </div>
+                          <div className="flex items-center justify-between gap-4">
                             <InlineFilters data={data} chipFilters={chipFilters} setChipFilters={setChipFilters} />
                             <div className="relative flex-shrink-0">
                               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D1D6DB]" size={13} />
@@ -317,7 +313,7 @@ export default function App() {
                                 className="pl-8 pr-4 py-2 bg-[#F2F4F6] border-none rounded-[10px] text-[12px] w-44 focus:outline-none focus:ring-2 focus:ring-[#3182F6]/20 focus:bg-white transition-all placeholder:text-[#B0B8C1]"
                               />
                             </div>
-                          </motion.div>
+                          </div>
                         </div>
 
                         <AnimatePresence initial={false}>
@@ -479,7 +475,7 @@ export default function App() {
                       selectedDate={calendarDate}
                       onSelectDate={(d, m) => { setCalendarDate(d); if (m) setCalendarMode(m); setCurrentPage(1); }}
                     />
-                  </motion.div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
